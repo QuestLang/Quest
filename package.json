@@ -1,0 +1,16 @@
+{
+  "name": "Quest",
+  "version": "1.0.0",
+  "description": "*** Will be rewritten in C or C++ if winner of competition.",
+  "main": "index.js",
+  "dependencies": {
+    "readline-sync": "^1.4.10"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC"
+}

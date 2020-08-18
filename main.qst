@@ -1,0 +1,22 @@
+input('Give your best estimate of pi: \n', estimate);
+var pi = 3;
+var a = 2;
+var b = 2;
+
+func calcPi(){
+  for(0 to 25000){
+    a = b;
+    for(0 to 2){ b+1; a*b; }
+    pi+4/a;
+
+    a=b;
+    for(0 to 2){ b+1; a*b; }
+    pi-4/a;
+  }
+}
+
+calcPi();
+print('You said pi was equal to &estimate \nPi is approximately &pi \nThat means that your guess and ours are &(pi-estimate) apart');
+
+
+// the point is to eliminate confusion between vars and parameters //
