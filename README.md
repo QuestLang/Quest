@@ -1,8 +1,5 @@
-# Quest Programming Language
+# Quest
+A high-level interpreted scripting language for the future. Written in Node.JS, soon rewriting in Julia, C, or C++
+[![Run on Repl.it](https://repl.it/badge/github/QuestLang/Quest)](https://repl.it/github/QuestLang/Quest)
 ***
-Will be rewritten in C or C++ if winner of competition.
-
-***
-### Cool Facts about Quest
-* It is written by [Bramley](https://bramley.repl.co) and [SpicySpices](https://spicedspices.repl.co)
-* Written in Javascript
+Created by [SpicySpices](https://spicedspices.repl.co) and [Bramley](https://bramley.repl.co) 
