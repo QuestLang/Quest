@@ -1,9 +1,9 @@
 // TOKENS
 const OPERATORS = ['+', '-', '*', '/'];
-const COMPARERS = ['=', '<', '>', '|'];
+const COMPARERS = ['=', '<', '>', '|', '!'];
 const SEPARATORS = [';', '(', ')', '{', '}', '[', ']', ',', "'", '"', '$', '&', '//'];
 const KEYWORDS = ['print', 'input', 'func', 'if', 'else', 'for', 'while', 'return'];
-const CONNECTORS = ['of', 'in', 'to', 'and'];
+const CONNECTORS = ['of', 'in', 'to', 'and', 'as'];
 const IDENTIFIERS = ['bool', 'const', 'var'];
 const ARRAY_PARAMS = ['anyCase', 'any'];
 
@@ -52,12 +52,12 @@ function lexer(text){
     currLine++;
     if(!chars) continue;
 
-    chars.trim();
-    if(!chars[chars.length-1].match(/[\;\{\[\(\=\|\,\?\:\<]/)){
-      chars += ';';
+    chars = chars.trimRight();
+    if(!chars[chars.length-1].match(/[\;\'\"{\[\(\=\|\,\?\:\]\)\}]/)){
+      if(!inString) chars += ';';
     }
     currCol = 0;
-
+    
     for(let char of chars){
       currCol++;
 

@@ -1,8 +1,30 @@
 const errors = require('../errors');
+const parseFuncs = require('./functions').parse;
 const readline = require('readline-sync');
 
 let variables = {};
 let functions = {};
+
+// Compare Statements
+function compare(stack){
+  if(!stack.find(a => a.lexeme === 'comparer')){
+    return process(parseFuncs.stack(stack));
+  }
+
+  let comparer = stack.findIndex(a => a.lexeme === 'comparer');
+  let first = compare(stack.slice(0, comparer));
+  let last = compare(stack.slice(comparer+1));
+  
+  if(stack[comparer].chars === '='){
+    return first === last;
+  } else if(stack[comparer].chars === '>'){
+    return first > last;
+  } else if(stack[comparer].chars === '<'){
+    return first < last;
+  } else if(stack[comparer].chars === '!'){
+    return first !== last;
+  }
+}
 
 // Evaluate Math Expressions
 function evaluateMath(oldStack){
@@ -168,6 +190,16 @@ function run(instructions){
           name: step.name,
           args: step.args,
           instructions: step.instructions
+        }
+        break;
+      case 'if':
+        if(compare(step.comparison)){
+          run(step.instructions);
+        }
+        break;
+      case 'while':
+        while(compare(step.comparison)){
+          run(step.instructions);
         }
         break;
       case 'call':

@@ -1,73 +1,24 @@
 const errors = require('../errors');
-
-let MathLexemeList = ['number', 'operator', 'separator', 'variable'];
-
-// Create a Stack of Evaluated Tokens
-function createStack(tokens){
-  let stack = [];
-  let mathStack = [];
-  
-  for(let token of tokens){
-    if(MathLexemeList.includes(token.lexeme)){
-      let value = token.chars;
-      if(token.lexeme === 'number'){
-        value = Number(token.chars);
-        if(Number(mathStack[mathStack.length-1])){
-          errors.unexpToken(token.chars, token.line, token.col);
-        }
-      }
-      mathStack.push(value);
-    } else {
-      if(mathStack[0] !== undefined){
-        stack.push({ type: 'math', stack: mathStack });
-        mathStack = [];
-      }
-      stack.push({ type: 'string', stack: token.chars });
-    }
-  }
-
-  if(mathStack[0] !== undefined) stack.push({ type: 'math', stack: mathStack });
-
-  return stack;
-}
-
-// Take Characters from line of Tokens
-function takeChars(line){
-  let endStr = '';
-  for(let token of line) endStr += token.chars;
-  return endStr;
-}
-
-// Get Arguments from a List of Tokens
-function getArguments(line){
-  let args = [];
-  let currArg = [];
-
-  for(let i=0; i<line.length; i++){
-    if(line[i].lexeme === 'separator' && line[i].chars === ','){
-      args.push(currArg);
-      currArg = [];
-    } else {
-      currArg.push(line[i]);
-    }
-  }
-
-  if(currArg[0]) args.push(currArg);
-
-  return args;
-}
+const parseFuncs = require('./functions').parse;
 
 /********** Main Parsing Function **********/
 function parser(tokens){
+
+  // Main Parsing Variables
   let instructions = [];
 
   let index = 0;
+  let end = 0;
+
+  let currInstruction = {};
   let token = tokens[index];
 
   // Add Instruction to Array
   const addInstruction = (toEnd) => {
     instructions.push(currInstruction);
     currInstruction = {};
+
+    if(toEnd && end == -1) errors.expected(';', token.line, token.col);
     if(toEnd) advance(end-index);
   }
 
@@ -77,61 +28,53 @@ function parser(tokens){
     token = tokens[index]
   }
 
-  // Find end of Parentheses
-  const findParEnd = (i) => {
-    let parCount = 1;
+  // Find End of Parentheses
+  const findSetEnd = (open, close) => {
+    let setCount = 1;
     let args = [];
-    while(parCount != 0){
+
+    // Check if in a Set of Parentheses
+    while(setCount != 0){
       let oldToken = token;
       advance(1);
-      if(!token) errors.expected(')', oldToken.line, oldToken.col);
-      if(token.chars === '(') parCount++;
-      if(token.chars === ')') parCount--;
-      if(parCount == 0) break;
 
+      // Check if at End of Character
+      if(!token) errors.expected(close, oldToken.line, oldToken.col);
+
+      // Find if Current Token is a Parenthesis
+      if(token.chars === open) setCount++;
+      if(token.chars === close) setCount--;
+
+      // Push Current Token into Expression
+      if(setCount == 0) break;
       args.push(token);
     }
     return args;
   }
 
-  // Find end of Brackets
-  const findBrackEnd = () => {
-    let brackCount = 1;
-    let expression = [];
-    while(brackCount != 0){
-      let oldToken = token;
-      advance(1);
-      if(!token) errors.expected('}', oldToken.line, oldToken.col);
-      if(token.chars === '{') brackCount++;
-      if(token.chars === '}') brackCount--;
-      if(brackCount == 0) break;
 
-      expression.push(token);
-    }
-    return expression;
-  }
-
-  // Instruction and End of Line
-  let currInstruction = {};
-  let end;
-
+  /********** Loop Over all Tokens **********/
   while(token){
 
     // Find the End of the Line
     end = tokens.slice(index).findIndex(a => a.chars === ';')+index;
-    
-    /********** Set Variable **********/
+    if(end - index == -1) end = -1;
+
+  /****** Set Variable ******/
     if(token.lexeme == 'identifier'){
 
       // Set and Retrieve Basic Information
       currInstruction.instruction = 'setvar';
       advance(1);
+
       currInstruction.name = token.chars;
+      parseFuncs.varbs(token.chars, token.line, token.chars);
       advance(1);
 
       // Add to Instructions
       if(token.chars != '=') errors.expected('=', token.line, token.col);
-      currInstruction.expression = createStack(tokens.slice(index+1, end));
+      
+      currInstruction.expression = parseFuncs.stack(tokens.slice(index+1, end));
       if(!currInstruction.expression[0]){
         errors.valueNotFound(currInstruction.name, token.line, token.col);
       }
@@ -143,21 +86,23 @@ function parser(tokens){
       
       addInstruction(true);
     }
+    
 
-    /*********** Call or Edit Variables ***********/
+  /******* Call or Edit Variables *******/
     else if(token.lexeme == 'variable'){
 
       // Set and Retrieve Basic Information
       let thisVar = token.chars;
+      parseFuncs.varbs(token.chars, token.line, token.chars);
       advance(1);
 
       // Call a Function
       if(token.chars === '('){
 
         // Find End of Statement
-        let expression = findParEnd();
+        let expression = findSetEnd('(', ')');
 
-        currInstruction.args = getArguments(expression);
+        currInstruction.args = parseFuncs.argms(expression);
 
         // Add to Instructions
         currInstruction.instruction = 'call';
@@ -175,7 +120,7 @@ function parser(tokens){
         } else {
           currInstruction.type = 'math';
         }
-        currInstruction.expression = createStack(expression);
+        currInstruction.expression = parseFuncs.stack(expression);
       
       // Operator Assigments
       } else if(token.chars.match(/[\+\-\*\/]/)){
@@ -183,7 +128,7 @@ function parser(tokens){
         
         currInstruction.instruction = 'operate';
         currInstruction.name = thisVar;
-        currInstruction.expression = createStack(tokens.slice(index+1, end));
+        currInstruction.expression = parseFuncs.stack(tokens.slice(index+1, end));
         currInstruction.operator = thisOperator;
       } else {
         advance(-1);
@@ -192,7 +137,8 @@ function parser(tokens){
       addInstruction(true);
     }
 
-    /*********** Print an Expression ***********/
+
+  /******* Print an Expression *******/
     else if(token.chars == 'print'){
 
       // Retrieve and set Basic Information
@@ -201,110 +147,117 @@ function parser(tokens){
       if(token.chars != '(') errors.expected('(', token.line, token.col);
 
       // Find End of Statement
-      let expression = findParEnd();
+      let expression = findSetEnd('(', ')');
 
       if(expression.find(a => a.lexeme === 'string')){
         currInstruction.type = 'string';
       } else {
         currInstruction.type = 'math';
       }
-      currInstruction.expression = createStack(expression);
+      currInstruction.expression = parseFuncs.stack(expression);
 
       addInstruction(true);
     }
+
     
-    /********** Input **********/
+  /******* Input *******/
     else if(token.chars === 'input') {
       currInstruction.instruction = 'input';
       advance(1);
       if(token.chars != '(') errors.expected('(', token.line, token.col);
 
-      let args = getArguments(findParEnd());
-      currInstruction.expression = createStack(args[0]);
-      currInstruction.variable = takeChars(args[1]);
+      let args = parseFuncs.argms(findSetEnd('(', ')'));
+      currInstruction.expression = parseFuncs.stack(args[0]);
+      currInstruction.variable = parseFuncs.chars(args[1]);
       addInstruction();
     }
     
-    /********** For Loops **********/
-    else if(token.chars == 'for'){
+
+  /******* For Loops *******/
+    else if(token.chars == 'for' && token.lexeme === 'keyword'){
       advance(1);
-      if(token.chars != '(') errors.expected('(', token.line, token.col);
+      if(token.chars != '('){
+        advance(-1);
+        errors.expected('(', token.line, token.col);
+      }
 
-      // Finds the Parentheses
       let oldIndex = index;
-      findParEnd();
-      let endStatement = index;
-      advance(oldIndex-index);
+      let varName;
+      let forArgs = findSetEnd('(', ')');
 
-      // Takes the Parts of the For Loop
-      let usingVar = tokens.slice(index).findIndex(a => a.chars == 'as');
-      usingVar = usingVar == -1 ? 0 : usingVar + index;
+      // Takes Essential Parts of Statement
+      let last = forArgs.findIndex(a => a.chars === 'as' && a.lexeme === 'connector');
+      last = last == -1 ? 0 : last;
 
-      let forMiddle = tokens.slice(index).findIndex(a => a.chars == 'to')+index;
-      if(forMiddle - index == -1) errors.expected('to', token.line, token.col);
+      let connector = forArgs.findIndex(a => a.chars === 'to' && a.lexeme === 'connector');
+      if(connector == -1) errors.expected('to', token.line, token.col);
+      
+      let forStart = forArgs.slice(0, connector);
+      let forEnd = !last ?  forArgs.slice(connector+1) : forArgs.slice(connector+1, last);
 
-      let forStart = tokens.slice(index+1, forMiddle);
-      let forEnd = tokens.slice(forMiddle+1, usingVar || endStatement);
-
-      let varName = tokens[forMiddle+forEnd.length+2].chars;
+      if(last) varName = parseFuncs.varbs(forArgs[last+1] ? forArgs[last+1].chars : '', token.line, token.col);
       
       if(!forStart[0]) errors.expectedLiteral('a starting value', token.line, token.col);
       if(!forEnd[0]) errors.expectedLiteral('an ending value', token.line, token.col);
 
       // Checks for Variable Counter
-      if(usingVar){
+      if(varName){
         currInstruction.instruction = 'setvar';
         currInstruction.name = varName;
         currInstruction.type = 'math';
-        currInstruction.expression = createStack(forStart);
-        addInstruction(true);
+        currInstruction.expression = parseFuncs.stack(forStart);
+        addInstruction();
       }
-
-      // Advances Token to The First Bracket
-      advance(endStatement-index+1);
+      advance(1);
 
       // Looks for What is Inside the For Loop
-      if(token.chars != '{') errors.expected('{', token.line, token.col); 
-
-      let forTokens = [];
-      forTokens = findBrackEnd();
+      if(token.chars != '{'){
+        advance(-1);
+        errors.expected('{', token.line, token.col); 
+      }
 
       // Add the Instructions to Array
-      let forInstructions = parser(forTokens);
-      if(usingVar){
+      let forInstructions = parser(findSetEnd('{', '}'));
+
+      if(varName){
         forInstructions.push({
           instruction: 'operate',
           name: varName,
-          expression: createStack([{ lexeme: 'number', chars: 1 }]),
+          expression: parseFuncs.stack([{ lexeme: 'number', chars: 1 }]),
           operator: '+'
         });
       }
       currInstruction.instruction = 'loop';
-      currInstruction.start = createStack(forStart);
-      currInstruction.end = createStack(forEnd);
+      currInstruction.start = parseFuncs.stack(forStart);
+      currInstruction.end = parseFuncs.stack(forEnd);
       currInstruction.instructions = forInstructions;
       addInstruction();
     }
 
-    /********** Functions **********/
-    else if(token.chars === 'func'){
+
+  /******* Functions *******/
+    else if(token.chars === 'func' && token.lexeme === 'keyword'){
       advance(1);
 
       if(token.lexeme !== 'variable'){
         errors.fnName(token.line, token.col);
       }
-      let fnName = token.chars;
+      let fnName = parseFuncs.varbs(token.chars, token.line, token.col);
       advance(1);
       if(token.chars !== '(' || token.lexeme !== 'separator'){
+        advance(-1);
         errors.expected('(', token.line, token.col);
       }
 
-      let fnArgs = getArguments(findParEnd());
+      let fnArgs = parseFuncs.argms(findSetEnd('(', ')'));
       advance(1);
-      if(token.chars !== '{') error.expected('{');
-      let fnTokens = findBrackEnd();
+      
+      if(token.chars !== '{'){
+        advance(-1);
+        errors.expected('{', token.line, token.col);
+      }
 
-      let fnInstructions = parser(fnTokens);
+      let fnInstructions = parser(findSetEnd('{', '}'));
 
       currInstruction.instruction = 'createFn';
       currInstruction.name = fnName;
@@ -313,8 +266,53 @@ function parser(tokens){
       addInstruction(); 
     }
 
-    advance(1);
+
+  /******* If Statements *******/
+    else if(token.chars === 'if' && token.lexeme === 'keyword'){
+      advance(1);
+      if(token.chars !== '(' && token.lexeme === 'separator'){
+        advance(-1);
+        errors.expected('(', token.line, token.col);
+      }
+      let ifArgs = findSetEnd('(', ')');
+
+      advance(1);
+      if(token.chars !== '{' && token.lexeme === 'separator'){
+        advance(-1);
+        errors.expected('{', token.line, token.col);
+      }
+      let ifInstructions = parser(findSetEnd('{', '}'));
+
+      currInstruction.instruction = 'if';
+      currInstruction.comparison = ifArgs;
+      currInstruction.instructions = ifInstructions;
+      addInstruction();
+    }
+
+    else if(token.chars === 'while' && token.lexeme === 'keyword'){
+      advance(1);
+      if(token.chars !== '(' && token.lexeme === 'separator'){
+        advance(-1);
+        errors.expected('(', token.line, token.col);
+      }
+      let whileArgs = findSetEnd('(', ')');
+
+      advance(1);
+      if(token.chars !== '{' && token.lexeme === 'separator'){
+        advance(-1);
+        errors.expected('{', token.line, token.col);
+      }
+      let whileInstructions = parser(findSetEnd('{', '}'));
+    
+      currInstruction.instruction = 'while';
+      currInstruction.comparison = whileArgs;
+      currInstruction.instructions = whileInstructions;
+      addInstruction();
+    }
+
+    advance(1); // At end of each Loop
   }
+
   return instructions;
 }
 

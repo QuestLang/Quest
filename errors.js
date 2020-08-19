@@ -17,11 +17,24 @@ const unexpToken = (token, line, col) => {
   throw new Error('Quest Syntax Error: unexpected token \'' + token + '\' at line ' + line + ' at column ' + col);
 }
 
+const reassignConst = (name, line, col) => {
+  throw new Error('Quest Variable Error: constant ' + name + ' was reassigned at line ' + line + ' at column ' + col);
+}
+const unavailableVar = (name, line, col) => {
+  throw new Error('Quest Variable Error: variable ' + name + ' can only have alphanumeric characters at line ' + line + ' at column ' + col);
+}
+const numericVar = (name, line, col) => {
+  throw new Error('Quest Variable Error: variable ' + name + ' must start with an alphabetic character at line ' + line + ' at column ' + col);
+}
+
 module.exports = {
   expected,
   expectedLiteral,
   fnName,
   variableNotFound,
   valueNotFound,
-  unexpToken
+  unexpToken,
+  reassignConst,
+  unavailableVar,
+  numericVar
 }
