@@ -7,35 +7,21 @@ function run(file){
   file = file.replace(/\\/g, '/');
   if(fs.existsSync(file)){
     let text = fs.readFileSync(file, 'utf-8');
-    return text;
+    let tokens = text ? lexer(text) : [];
+
+    let instructions = parser(tokens);
+    runner(instructions);
   } else {
     console.error("Quest File Error: " + file + ' is not a valid directory');
   }
 }
 
-let text = run('main.qst');
-let tokens = text ? lexer(text) : [];
-
-let instructions = parser(tokens);
-
-let start = process.hrtime();
-runner(instructions);
-let end = process.hrtime();
-let timeTaken = (end[0]*1000000+end[1]/1000)-(start[0]*1000000+start[1]/1000);
-console.log('Run Time: ' + Math.floor(timeTaken) + 'mcs');
+run('/quest-src/math.qst');
+run('main.qst');
 
 while(true){
   let str = prompt('>');
   if(str.slice(0, 4) === 'run '){
     let text = run(str.slice(4));
-    let tokens = text ? lexer(text) : [];
-
-    let instructions = parser(tokens);
-
-    let start = process.hrtime();
-    runner(instructions);
-    let end = process.hrtime();
-    let timeTaken = (end[0]*1000000+end[1]/1000)-(start[0]*1000000+start[1]/1000);
-    console.log('Run Time: ' + Math.floor(timeTaken) + 'mcs');
   };
 };

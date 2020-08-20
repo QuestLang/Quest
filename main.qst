@@ -1,14 +1,2 @@
-input('Guess a number 1-10: \n', estimate);
-var rand = 3;
-var a = 2;
-var b = 2;
-
-
-while(estimate ! rand){
-  if(estimate > rand){ print('Too High'); }
-  if(estimate < rand){ print('Too Low'); }
-
-  input('Guess another number 1-10: \n', estimate);
-}
-
-print('Perfect! Good Job!');
+var theSquareRootOf2 = Sqrt(2);
+print(theSquareRootOf2);

@@ -2,12 +2,12 @@
 const OPERATORS = ['+', '-', '*', '/'];
 const COMPARERS = ['=', '<', '>', '|', '!'];
 const SEPARATORS = [';', '(', ')', '{', '}', '[', ']', ',', "'", '"', '$', '&', '//'];
-const KEYWORDS = ['print', 'input', 'func', 'if', 'else', 'for', 'while', 'return'];
+const KEYWORDS = ['print', 'input', 'clear', 'func', 'if', 'else', 'for', 'while', 'return', 'break'];
 const CONNECTORS = ['of', 'in', 'to', 'and', 'as'];
 const IDENTIFIERS = ['bool', 'const', 'var'];
 const ARRAY_PARAMS = ['anyCase', 'any'];
 
-let inString = false, inConcat = false, inComment = false;
+let inString = false, inConcat = false, deepConcat = false, inComment = false;
 
 // TOKEN CREATOR
 function newToken(charGroup){
@@ -44,17 +44,18 @@ function newToken(charGroup){
 let currGroup = '';
 let currLine = 0;
 let currCol = 0;
+
 function lexer(text){
   let tokens = [];
   let charArray = text.split('\n');
   
   for(let chars of charArray){
     currLine++;
+    if(!inString) chars = chars.trim();
     if(!chars) continue;
 
-    chars = chars.trimRight();
-    if(!chars[chars.length-1].match(/[\;\'\"{\[\(\=\|\,\?\:\]\)\}]/)){
-      if(!inString) chars += ';';
+    if(!chars[chars.length-1].match(/[\;\'\"{\[\(\=\|\,\?\:\}]/)){
+      chars += ';';
     }
     currCol = 0;
     
@@ -65,8 +66,8 @@ function lexer(text){
         // String Methods
         if(char.match(/[\'\"]/)){
           if(currGroup) tokens.push(newToken(currGroup));
-          if(inConcat) inConcat = false, inString = true;
           inString = !inString;
+          if(inConcat) inConcat = deepConcat = inString = false;
           continue;
 
         // Concatenation for Strings
@@ -78,7 +79,7 @@ function lexer(text){
         // Keywords and Variables behind a Space
         } else if(char.match(/\s/gi) && !inString){
           if(currGroup) tokens.push(newToken(currGroup));
-          if(inConcat) inConcat = false, inString = true;
+          if(inConcat && !deepConcat) inConcat = false, inString = true;
         
         // Comparers
         } else if(COMPARERS.includes(char) && !inString){
@@ -87,6 +88,8 @@ function lexer(text){
         
         // Separators
         } else if(SEPARATORS.includes(char) && !inString){
+          if(char === '(' && inConcat) deepConcat = true;
+          if(char === ')' && deepConcat) deepConcat = false;
           if(currGroup) tokens.push(newToken(currGroup));
           tokens.push(newToken(char));
 

@@ -1,4 +1,4 @@
-const errors = require('../errors');
+const errors = require('./errors');
 const MathLexemeList = ['number', 'operator', 'separator', 'variable'];
 
 // Take Characters from line of Tokens
@@ -41,12 +41,141 @@ function getArguments(line){
   }
 
   if(currArg[0]) args.push(currArg); // Push Last Arg
-
   return args;
 }
 
 // Create a Stack of Evaluated Tokens
-const createStack = (tokens) => {
+const createStack = (tokens, type) => {
+  let stack = [];
+  if(type === 'math'){
+    let mathStack = [];
+
+    // Loop Through Tokens to Create Stack
+    for(let i=0; i<tokens.length; i++){
+      let token = tokens[i];
+      
+      // Numbers
+      if(token.lexeme === 'number'){
+        mathStack.push(Number(token.chars));
+      
+      // Operators
+      } else if(token.lexeme === 'operator'){
+        mathStack.push(token.chars);
+      
+      // Separators
+      } else if(token.lexeme === 'separator'){
+        mathStack.push(token.chars);
+
+      // Calling Functions
+      } else if(token.lexeme === 'variable'){
+
+        if(tokens[i+1] && tokens[i+1].chars === '('){
+          if(!tokens[i+2]) errors.expected(')', tokens[i+1].line, tokens[i+1].col);
+          
+          let funcArgs = [];
+
+          // If It has Parameters
+          if(tokens[i+2].chars !== ')'){
+            let end;
+            let setCount = 1;
+            for(let j=0; j<tokens.slice(i+2).length; j++){
+              let thisToken = tokens[j+i+2];
+              if(thisToken.chars === '(') setCount++;
+              if(thisToken.chars === ')') setCount--;
+              if(setCount == 0){ end = j+i+2; break; }
+            }
+            if(!end) errors.expected(')', tokens[i+2].line, tokens[i+2].col);
+
+            let args = getArguments(tokens.slice(i+2, end));
+            
+            for(let j=0; j<args.length; j++){
+              let thisType = args[j].find(a => a.lexeme === 'string') ? 'string' : 'math';
+              args[j] = createStack(args[j], thisType);
+            }
+
+            funcArgs = args;
+          }
+
+          mathStack.push({
+            instruction: 'call',
+            name: tokens[i].chars,
+            args: funcArgs
+          });
+
+          i += 2 + funcArgs.length*2-1;
+      // Normal Variables
+        } else {
+          mathStack.push(token.chars);
+        }
+      }
+    }
+    stack.push({ type: 'math', stack: mathStack });
+  } else {
+    stack = createStringStack(tokens);
+  }
+
+  return stack;
+}
+const createStasack = (tokens, type) => {
+  let stack = [];
+  let currIndex = 0;
+
+  if(type === 'math'){
+    let mathStack = [];
+
+    for(let i=0; i<tokens.length; i++){
+      let token = tokens[i];
+
+      if(token.lexeme === 'operator' || token.chars.match(/[\(\)]/) || i+1 === tokens.length){
+        let ending = i+1 === tokens.length ? i+1 : i;
+        let value = tokens.slice(currIndex, ending);
+        currIndex = value.length;
+        i = currIndex+1;
+
+        if(value.length == 0) continue;
+
+        if(value.length == 1){
+          let pushValue = Number(value[0].chars) == value[0].chars ? 
+          Number(value[0].chars) : value[0].chars;
+          
+          if(token.chars.match(/[\(\)]/)) mathStack.push(token.chars);
+
+          mathStack.push(pushValue);
+
+        // Calling Functions
+        } else if(value[1].chars === '('){
+          let setCount = 1;
+          let args = [];
+
+          // Take Arguments
+          let j = 1;
+          let thisToken = value[j];
+          while(setCount != 0){
+            let oldToken = thisToken;
+            j++;
+            thisToken = value[j];
+            if(!thisToken) errors.expected(')', oldToken.line, oldToken.col);
+            if(thisToken.chars === '(') setCount++;
+            if(thisToken.chars === ')') setCount--;
+            if(setCount == 0) break;
+            args.push(thisToken);
+          }
+          
+          args = getArguments(args);
+
+          mathStack.push({ instruction: 'call', name: value[0].chars, args: args });
+        }
+
+        if(token.lexeme === 'operator') mathStack.push(token.chars);
+      }
+    }
+    stack.push({ type: 'math', stack: mathStack });
+  } else {
+    stack = createStringStack(tokens);
+  }
+  return stack;
+}
+const createStringStack = (tokens) => {
   let stack = [];
   let mathStack = [];
   

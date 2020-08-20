@@ -1,0 +1,75 @@
+func Abs(x){
+  if(x > 0){ return x; }
+  if(x = 0){ return x; }
+  if(x < 0){ return -x; }
+}
+func Mod(x, y){
+  var z = Abs(x);
+  var a = y;
+  while(z > a){
+    z - a;
+  }
+  return z;
+}
+func Pow(x, y){
+  var z = x;
+  for(1 to y){ z * x; }
+  return z;
+}
+func Floor(x){
+  return x - Mod(x, 1);
+}
+func Ceil(x){
+  return x + 1 - Mod(x, 1);
+}
+func Round(x){
+  var y = Mod(x, 1);
+  if(y > 0.5){ return Ceil(x); }
+  if(y = 0.5){ return Ceil(x); }
+  if(y < 0.5){ return Floor(x); }
+}
+
+func Sqrt(x){
+  var y = x / 2;
+  var z = 0;
+  while(y ! z){
+    z = y;
+    y = (y + x/y) / 2;
+  }
+  return y;
+}
+
+
+//    Trigonometric Functions   //
+func ToRad(x){ return x / 180 * Pi; }
+func ToDeg(x){ return x * 180 / Pi; }
+
+func Sin(x){
+  var y = Mod(x, Pi);
+  var z = y;
+  var a = 1;
+  for(0 to 8){
+    a+2;
+    y - Pow(z, a) / Factorial(a);
+    a+2;
+    y + Pow(z, a) / Factorial(a);
+  }
+  return y;
+}
+func Cos(x){
+  var y = Pi/2 - x;
+  return Sin(y);
+}
+func Tan(x){
+  return Sin(x) / Cos(x);
+}
+
+func Factorial(x){
+  var y = 1;
+  for(1 to x+1 as i){ y * i; }
+  return y;
+}
+
+
+var Pi = 3.1415926535897932384626433832795;
+var E = 2.7182818284590452353602874713527;

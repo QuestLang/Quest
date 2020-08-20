@@ -1,4 +1,4 @@
-const errors = require('../errors');
+const errors = require('./errors');
 const parseFuncs = require('./functions').parse;
 const readline = require('readline-sync');
 
@@ -8,7 +8,8 @@ let functions = {};
 // Compare Statements
 function compare(stack){
   if(!stack.find(a => a.lexeme === 'comparer')){
-    return process(parseFuncs.stack(stack));
+    let type = stack.find(a => a.lexeme === 'string') ? 'string' : 'math';
+    return process(parseFuncs.stack(stack, type));
   }
 
   let comparer = stack.findIndex(a => a.lexeme === 'comparer');
@@ -26,25 +27,68 @@ function compare(stack){
   }
 }
 
+function call(name, args){
+  if(!functions[name]) errors.functionNotFound(name);
+
+  let thisFunc = functions[name];
+
+  let oldVariables = JSON.parse(JSON.stringify(variables));
+  
+  // Create Local 
+  if(thisFunc.parameters){
+    for(let i=0; i<thisFunc.parameters.length; i++){
+      let currParam = thisFunc.parameters[i];
+
+      let type = args[i].find(a => a.type === 'math') ? 'math' : 'string';
+      let value = process(args[i], type);
+
+      variables[currParam] = {
+        name: currParam,
+        value: value || undefined,
+        type: type
+      }
+    }
+  }
+
+  // Run Instructions and Send Back Return Value
+  
+  let returnValue = run(thisFunc.instructions);
+  variables = oldVariables;
+
+  return returnValue;
+}
+
 // Evaluate Math Expressions
 function evaluateMath(oldStack){
-  let mathStack = [...oldStack];
+  if(oldStack == undefined) return undefined;
 
+  let mathStack = [...oldStack];
+  
+  // If One Value
   if(mathStack.length == 1){
     if(Number(mathStack[0]) === mathStack[0]){
       return mathStack[0];
     } else if(variables[mathStack[0]]){
       return variables[mathStack[0]].value;
+    } else if(mathStack[0].instruction === 'call'){
+      return call(mathStack[0].name, mathStack[0].args);
     } else {
       errors.variableNotFound(mathStack[0]);
     }
   }
+
+  // If One Simple Equation
   if(mathStack.length == 3){
     if(variables[mathStack[0]]){
       mathStack[0] = variables[mathStack[0]].value;
+    } else if(mathStack[0].instruction === 'call'){
+      mathStack[0] = Number(call(mathStack[0].name, mathStack[0].args));
     }
+    
     if(variables[mathStack[2]]){
       mathStack[2] = variables[mathStack[2]].value;
+    } else if(mathStack[2].instruction === 'call'){
+      mathStack[2] = Number(call(mathStack[2].name, mathStack[2].args));
     }
 
     if(mathStack[1] === '+') return mathStack[0]+mathStack[2];
@@ -60,11 +104,11 @@ function evaluateMath(oldStack){
     // Change Variables to Values
     if(variables[mathStack[i]]){
       mathStack[i] = variables[mathStack[i]].value;
+    } else if(mathStack[i].instruction === 'call'){
+      mathStack[i] = Number(call(mathStack[i].name, mathStack[i].args));
     }
 
     // Find Parentheses
-    let currStack = [];
-    if(parCount > 0) currStack += mathStack[i];
     if(mathStack[i] === '(') parCount++;
     if(mathStack[i] === ')') parCount--;
 
@@ -92,11 +136,14 @@ function evaluateMath(oldStack){
   // Addition and Subtraction
   for(let i=0; i<mathStack.length; i++){
     let value;
+    let firstVal = mathStack[i-1] ? mathStack[i-1] : 0;
     if(mathStack[i] === '+') value = mathStack[i-1]+mathStack[i+1];
-    if(mathStack[i] === '-') value = mathStack[i-1]-mathStack[i+1];
-    
-    if(value){
+    if(mathStack[i] === '-') value = firstVal-mathStack[i+1];
+    if(value && firstVal){
       mathStack.splice(i-1, 3, value);
+      i--;
+    } else if(value){
+      mathStack.splice(i, 2, value);
       i--;
     }
   }
@@ -182,28 +229,44 @@ function run(instructions){
         let loopEnd = Number(process(step.end, 'math'));
 
         for(let i=loopStart; i<loopEnd; i++){
-          run(step.instructions);
+          let result = run(step.instructions);
+          if(result) return result;
         }
         break;
+      case 'random':
+        let min = Number(process(step.min, 'math'));
+        let max = Number(process(step.max, 'math'));
+
+        variables[step.name] = {
+          name: step.name,
+          type: 'string',
+          value: Math.random()*(max-min)+min
+        }
+
       case 'createFn':
         functions[step.name] = {
           name: step.name,
-          args: step.args,
+          parameters: step.parameters,
           instructions: step.instructions
         }
         break;
+      case 'return':
+        return process(step.value);
+        break;
       case 'if':
         if(compare(step.comparison)){
-          run(step.instructions);
+          let result = run(step.instructions);
+          if(result) return result;
         }
         break;
       case 'while':
         while(compare(step.comparison)){
-          run(step.instructions);
+          let result = run(step.instructions);
+          if(result) return result;
         }
         break;
       case 'call':
-        run(functions[step.name].instructions);
+        call(step.name, step.args);
         break;
     }
   }

@@ -10,6 +10,9 @@ const fnName = (line, col) => {
 const variableNotFound = (name) => {
   throw new Error('Quest Syntax Error: variable ' + name + ' is not assigned');
 }
+const functionNotFound = (name) => {
+  throw new Error('Quest Syntax Error: function ' + name + ' is not assigned');
+}
 const valueNotFound = (name, line, col) => {
   throw new Error('Quest Syntax Error: value for variable ' + name + ' was not found at line ' + line + ' at column ' + col);
 }
@@ -32,6 +35,7 @@ module.exports = {
   expectedLiteral,
   fnName,
   variableNotFound,
+  functionNotFound,
   valueNotFound,
   unexpToken,
   reassignConst,
