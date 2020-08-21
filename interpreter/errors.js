@@ -30,6 +30,10 @@ const numericVar = (name, line, col) => {
   throw new Error('Quest Variable Error: variable ' + name + ' must start with an alphabetic character at line ' + line + ' at column ' + col);
 }
 
+const noNegative = (name) => {
+  throw new Error('Quest Runtime Error: function ' + name + ' does not allow a negative parameter');
+}
+
 module.exports = {
   expected,
   expectedLiteral,
@@ -40,5 +44,6 @@ module.exports = {
   unexpToken,
   reassignConst,
   unavailableVar,
-  numericVar
+  numericVar,
+  noNegative
 }

@@ -1,13 +1,25 @@
 // TOKENS
-const OPERATORS = ['+', '-', '*', '/'];
+const OPERATORS = ['+', '-', '*', '/', '%', '^'];
 const COMPARERS = ['=', '<', '>', '|', '!'];
 const SEPARATORS = [';', '(', ')', '{', '}', '[', ']', ',', "'", '"', '$', '&', '//'];
-const KEYWORDS = ['print', 'input', 'clear', 'func', 'if', 'else', 'for', 'while', 'return', 'break'];
+const KEYWORDS = ['print', 'error', 'input', 'clear', 'func', 'if', 'else', 'for', 'while', 'return', 'break'];
 const CONNECTORS = ['of', 'in', 'to', 'and', 'as'];
 const IDENTIFIERS = ['bool', 'const', 'var'];
 const ARRAY_PARAMS = ['anyCase', 'any'];
 
 let inString = false, inConcat = false, deepConcat = false, inComment = false;
+
+// Resetting Lines and Columns
+function reset(){
+  currLine = 0;
+  currCol = 0;
+  currGroup = '';
+
+  inString = false
+  inConcat = false
+  deepConcat = false
+  inComment = false;
+}
 
 // TOKEN CREATOR
 function newToken(charGroup){
@@ -130,4 +142,4 @@ function lexer(text){
   return tokens;
 }
 
-module.exports = lexer;
+module.exports = { lexer, reset };

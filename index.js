@@ -7,16 +7,21 @@ function run(file){
   file = file.replace(/\\/g, '/');
   if(fs.existsSync(file)){
     let text = fs.readFileSync(file, 'utf-8');
-    let tokens = text ? lexer(text) : [];
+    let tokens = text ? lexer.lexer(text) : [];
 
     let instructions = parser(tokens);
-    runner(instructions);
+    runner.run(instructions);
   } else {
     console.error("Quest File Error: " + file + ' is not a valid directory');
   }
 }
 
-run('/quest-src/math.qst');
+// Run The Main Quest Files
+run('quest-src/math.qst');
+run('quest-src/string.qst');
+lexer.reset();
+
+// User Generated
 run('main.qst');
 
 while(true){

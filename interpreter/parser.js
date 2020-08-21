@@ -1,5 +1,5 @@
 const errors = require('./errors');
-const parseFuncs = require('./functions').parse;
+const parseFuncs = require('./utils').parse;
 
 /********** Main Parsing Function **********/
 function parser(tokens){
@@ -168,8 +168,19 @@ function parser(tokens){
       if(token.chars != '(') errors.expected('(', token.line, token.col);
 
       let args = parseFuncs.argms(findSetEnd('(', ')'));
-      currInstruction.expression = parseFuncs.stack(args[0]);
-      currInstruction.variable = parseFuncs.chars(args[1]);
+      currInstruction.expression = parseFuncs.stack(args[0], 'string');
+      currInstruction.variable = parseFuncs.chars(args[1], 'string');
+      addInstruction();
+    }
+
+  /******* Errors *******/
+    else if(token.chars === 'error') {
+      currInstruction.instruction = 'error';
+      advance(1);
+      if(token.chars != '(') errors.expected('(', token.line, token.col);
+
+      let saying = parseFuncs.stack(findSetEnd('(', ')'), 'string');
+      currInstruction.expression = saying;
       addInstruction();
     }
     

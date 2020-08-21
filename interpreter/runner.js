@@ -1,9 +1,33 @@
 const errors = require('./errors');
-const parseFuncs = require('./functions').parse;
+const parseFuncs = require('./utils').parse;
+const MainFunctions = require('./functions');
 const readline = require('readline-sync');
 
 let variables = {};
 let functions = {};
+
+// Deep Clone Objects
+function deepClone(obj) {
+  const cloned = Array.isArray(obj) ? [] : {};
+  if (Array.isArray(obj)) {
+    for (const prop of obj) {
+      if (typeof prop !== 'object' || !prop) {
+        cloned.push(prop)
+      } else {
+        cloned.push(clone(prop))
+      }
+    }
+  } else {
+    for (const prop in obj) {
+      if (typeof obj[prop] !== 'object' || !obj[prop]) {
+        cloned[prop] = obj[prop]
+      } else {
+        cloned[prop] = deepClone(obj[prop])
+      }
+    }
+  }
+  return cloned;
+}
 
 // Compare Statements
 function compare(stack){
@@ -28,34 +52,50 @@ function compare(stack){
 }
 
 function call(name, args){
-  if(!functions[name]) errors.functionNotFound(name);
+  let returnValue;
 
   let thisFunc = functions[name];
 
-  let oldVariables = JSON.parse(JSON.stringify(variables));
-  
-  // Create Local 
-  if(thisFunc.parameters){
-    for(let i=0; i<thisFunc.parameters.length; i++){
-      let currParam = thisFunc.parameters[i];
+  // Main Functions
+  if(Object.keys(MainFunctions).includes(name)){
+    let allArgs = [];
 
+    // Get Arguments
+    for(let i=0; i<args.length; i++){
       let type = args[i].find(a => a.type === 'math') ? 'math' : 'string';
-      let value = process(args[i], type);
+      allArgs.push(process(args[i], type));
+    }
 
-      variables[currParam] = {
-        name: currParam,
-        value: value || undefined,
-        type: type
+    // Send Back Return
+    return MainFunctions[name](...allArgs);
+  
+  // User Created Functions
+  } else {
+    if(!functions[name]) errors.functionNotFound(name);
+
+    let oldVariables = deepClone(variables);
+    
+    // Create Local 
+    if(thisFunc.parameters[0] !== undefined){
+      for(let i=0; i<thisFunc.parameters.length; i++){
+        let currParam = thisFunc.parameters[i];
+
+        let type = args[i].find(a => a.type === 'math') ? 'math' : 'string';
+        let value = process(args[i], type);
+
+        variables[currParam] = {
+          name: currParam,
+          value: value,
+          type: type
+        }
       }
     }
+
+    // Run Instructions and Send Back Return Value
+    returnValue = run(thisFunc.instructions);
+    variables = oldVariables;
+    return returnValue;
   }
-
-  // Run Instructions and Send Back Return Value
-  
-  let returnValue = run(thisFunc.instructions);
-  variables = oldVariables;
-
-  return returnValue;
 }
 
 // Evaluate Math Expressions
@@ -95,6 +135,7 @@ function evaluateMath(oldStack){
     if(mathStack[1] === '-') return mathStack[0]-mathStack[2];
     if(mathStack[1] === '*') return mathStack[0]*mathStack[2];
     if(mathStack[1] === '/') return mathStack[0]/mathStack[2];
+    if(mathStack[1] === '%') return mathStack[0]%mathStack[2];
   }
 
   // Loop through Stack
@@ -118,6 +159,18 @@ function evaluateMath(oldStack){
       mathStack.splice(parStart-1, i-parStart+2, value);
       i -= i-parStart;
       parStart = null;
+    }
+  }
+
+  // Modulus Operator
+  for(let i=0; i<mathStack.length; i++){
+    let value;
+    if(mathStack[i] === '%') value = mathStack[i-1]%mathStack[i+1];
+    if(mathStack[i] === '^') value = mathStack[i-1]**mathStack[i+1];
+    
+    if(value){
+      mathStack.splice(i-1, 3, value);
+      i--;
     }
   }
 
@@ -174,6 +227,12 @@ function process(stack, type){
   }
 }
 
+// Reset
+function reset(){
+  variables = {};
+  functions = {};
+}
+
 /********** Main Running Function **********/
 function run(instructions){
   for(let step of instructions){
@@ -210,12 +269,12 @@ function run(instructions){
         break;
       case 'print':
         let printValue = String(process(step.expression, step.type));
-        printValue = printValue.replace(/\\n/g, '\n');
+        printValue = JSON.parse('"'+printValue+'"');
         console.log(printValue);
         break;
       case 'input':
         let inputPrint = String(process(step.expression, step.type));
-        inputPrint = inputPrint.replace(/\\n/g, '\n');
+        inputPrint = JSON.parse('"'+inputPrint+'"');
         inputValue = readline.question(inputPrint);
 
         variables[step.variable] = {
@@ -224,6 +283,10 @@ function run(instructions){
           value: inputValue
         }
         break;
+      case 'error':
+        let saying = String(process(step.expression, 'string'));
+        saying = JSON.parse('"'+saying+'"');
+        throw new Error(saying);
       case 'loop':
         let loopStart = Number(process(step.start, 'math'));
         let loopEnd = Number(process(step.end, 'math'));
@@ -272,4 +335,4 @@ function run(instructions){
   }
 }
 
-module.exports = run;
+module.exports = { run, reset };
