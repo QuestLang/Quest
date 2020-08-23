@@ -1,4 +1,4 @@
-const errors = require('./errors');
+const errors = require('../quest-src/errors');
 const parseFuncs = require('./utils').parse;
 
 /********** Main Parsing Function **********/
@@ -60,15 +60,34 @@ function parser(tokens){
     end = tokens.slice(index).findIndex(a => a.chars === ';')+index;
     if(end - index == -1) end = -1;
 
-  /****** Set Variable ******/
-    if(token.lexeme == 'identifier'){
+  /******* Main Quest Instructions *******/
+    if(token.lexeme == 'quest'){
+      if(token.chars == 'add'){
+        advance(1);
+        if(token.chars != '(') errors.expected('(', token.line, token.col);
+        advance(1);
+        if(!token) errors.expectedLiteral('an import name or directory', token.line, token.col);
+        let fileName = token.chars;
+        advance(1);
+        if(token.chars != ')') errors.expected(')', token.line, token.col);
+        advance(1);
+        if(token.chars != ';') errors.unexpToken(token.chars, token.line, token.col);
+
+        currInstruction.instruction = 'import';
+        currInstruction.name = fileName;
+        addInstruction(true);
+      }
+    }
+
+  /******* Set Variable *******/
+    else if(token.lexeme == 'identifier'){
 
       // Set and Retrieve Basic Information
       currInstruction.instruction = 'setvar';
       advance(1);
 
       currInstruction.name = token.chars;
-      parseFuncs.varbs(token.chars, token.line, token.chars);
+      parseFuncs.varbs(token.chars, token.line, token.col);
       advance(1);
 
       // Add to Instructions
@@ -88,7 +107,6 @@ function parser(tokens){
       addInstruction(true);
     }
     
-
   /******* Call or Edit Variables *******/
     else if(token.lexeme == 'variable'){
 
@@ -102,15 +120,24 @@ function parser(tokens){
 
         // Find End of Statement
         let expression = findSetEnd('(', ')');
-
         currInstruction.args = parseFuncs.argms(expression);
+
+        for(let j=0; j<currInstruction.args.length; j++){
+          let currArg = currInstruction.args[j];
+          
+          if(currArg[0].chars !== '$'){
+            currInstruction.args[j] = parseFuncs.stack(currArg);
+          } else {
+            continue;
+          }
+        }
 
         // Add to Instructions
         currInstruction.instruction = 'call';
         currInstruction.name = thisVar;
 
       // Edit Variable Values
-      } else if(token.chars === '='){
+      } else if(token.chars == '='){
         currInstruction.instruction = 'changevar';
         currInstruction.name = thisVar;
         
@@ -162,7 +189,7 @@ function parser(tokens){
 
     
   /******* Input *******/
-    else if(token.chars === 'input') {
+    else if(token.chars == 'input') {
       currInstruction.instruction = 'input';
       advance(1);
       if(token.chars != '(') errors.expected('(', token.line, token.col);
@@ -174,7 +201,7 @@ function parser(tokens){
     }
 
   /******* Errors *******/
-    else if(token.chars === 'error') {
+    else if(token.chars == 'error') {
       currInstruction.instruction = 'error';
       advance(1);
       if(token.chars != '(') errors.expected('(', token.line, token.col);
@@ -186,7 +213,7 @@ function parser(tokens){
     
 
   /******* For Loops *******/
-    else if(token.chars == 'for' && token.lexeme === 'keyword'){
+    else if(token.chars == 'for' && token.lexeme == 'keyword'){
       advance(1);
       if(token.chars != '('){
         advance(-1);
@@ -198,10 +225,10 @@ function parser(tokens){
       let forArgs = findSetEnd('(', ')');
 
       // Takes Essential Parts of Statement
-      let last = forArgs.findIndex(a => a.chars === 'as' && a.lexeme === 'connector');
+      let last = forArgs.findIndex(a => a.chars == 'as' && a.lexeme === 'connector');
       last = last == -1 ? 0 : last;
 
-      let connector = forArgs.findIndex(a => a.chars === 'to' && a.lexeme === 'connector');
+      let connector = forArgs.findIndex(a => a.chars == 'to' && a.lexeme === 'connector');
       if(connector == -1) errors.expected('to', token.line, token.col);
       
       let forStart = forArgs.slice(0, connector);
@@ -246,40 +273,16 @@ function parser(tokens){
       addInstruction();
     }
 
-  /******* Random *******/
-    else if(token.chars === 'random' && token.lexeme === 'keyword'){
-      advance(1);
-      if(token.chars !== '(' || token.lexeme !== 'separator'){
-        advance(-1);
-        errors.expected('(', token.line, token.col);
-      }
-
-      let randArgs = parseFuncs.argms(findSetEnd('(', ')'));
-      if(!randArgs[0]) errors.expectedLiteral('a minimum range', token.line, token.col);
-      if(!randArgs[1]) errors.expectedLiteral('a maximum range', token.line, token.col);
-      if(!randArgs[2]) errors.expectedLiteral('a variable', token.line, token.col);
-      
-      let min = parseFuncs.stack(randArgs[0]);
-      let max = parseFuncs.stack(randArgs[1]);
-      let settingVar = randArgs[2][0].chars;
-
-      currInstruction.instruction = 'random';
-      currInstruction.min = min;
-      currInstruction.max = max;
-      currInstruction.name = settingVar;
-      addInstruction();
-    }
-
   /******* Functions *******/
-    else if(token.chars === 'func' && token.lexeme === 'keyword'){
+    else if(token.chars == 'func' && token.lexeme == 'keyword'){
       advance(1);
 
-      if(token.lexeme !== 'variable'){
+      if(token.lexeme != 'variable'){
         errors.fnName(token.line, token.col);
       }
       let fnName = parseFuncs.varbs(token.chars, token.line, token.col);
       advance(1);
-      if(token.chars !== '(' || token.lexeme !== 'separator'){
+      if(token.chars != '(' || token.lexeme != 'separator'){
         advance(-1);
         errors.expected('(', token.line, token.col);
       }
@@ -288,7 +291,7 @@ function parser(tokens){
       advance(1);
       for(let i=0; i<fnArgs.length; i++) fnArgs[i] = fnArgs[i][0].chars;
       
-      if(token.chars !== '{'){
+      if(token.chars != '{'){
         advance(-1);
         errors.expected('{', token.line, token.col);
       }
@@ -303,28 +306,33 @@ function parser(tokens){
     }
 
   /******* Return Value *******/
-    else if(token.chars === 'return' && token.lexeme === 'keyword'){
+    else if(token.chars == 'return' && token.lexeme == 'keyword'){
       currInstruction.instruction = 'return';
       let type = 'math';
-      if(tokens.slice(index+1, end).find(a => a.lexeme === 'string')){
+      if(tokens.slice(index+1, end).find(a => a.lexeme == 'string')){
         type = 'string';
       }
       currInstruction.value = parseFuncs.stack(tokens.slice(index+1, end), type);
       addInstruction(true);
     }
-
+  
+  /******* Break and Continue *******/
+    else if(token.chars == 'break' || token.chars == 'continue' && token.lexeme === 'keyword'){
+      currInstruction.instruction = token.chars;
+      addInstruction(true);
+    }
 
   /******* If Statements *******/
-    else if(token.chars === 'if' && token.lexeme === 'keyword'){
+    else if(token.chars == 'if' && token.lexeme == 'keyword'){
       advance(1);
-      if(token.chars !== '(' && token.lexeme === 'separator'){
+      if(token.chars != '(' && token.lexeme == 'separator'){
         advance(-1);
         errors.expected('(', token.line, token.col);
       }
       let ifArgs = findSetEnd('(', ')');
 
       advance(1);
-      if(token.chars !== '{' && token.lexeme === 'separator'){
+      if(token.chars != '{' && token.lexeme == 'separator'){
         advance(-1);
         errors.expected('{', token.line, token.col);
       }
@@ -337,16 +345,16 @@ function parser(tokens){
     }
   
   /******* While Loops *******/
-    else if(token.chars === 'while' && token.lexeme === 'keyword'){
+    else if(token.chars == 'while' && token.lexeme == 'keyword'){
       advance(1);
-      if(token.chars !== '(' && token.lexeme === 'separator'){
+      if(token.chars != '(' && token.lexeme == 'separator'){
         advance(-1);
         errors.expected('(', token.line, token.col);
       }
       let whileArgs = findSetEnd('(', ')');
 
       advance(1);
-      if(token.chars !== '{' && token.lexeme === 'separator'){
+      if(token.chars != '{' && token.lexeme == 'separator'){
         advance(-1);
         errors.expected('{', token.line, token.col);
       }

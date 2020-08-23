@@ -1,11 +1,4 @@
-var a = Floor(Random(3, 5));
+add('test.qst');
 
-input('Guess a number 1-10:\n', guess);
-
-while(guess ! a){
-  if(guess > a){ print('Too High!'); }
-  if(guess < a){ print('Too Low!'); }
-  input('Guess another number 1-10:\n', guess);
-}
-
-print('Perfect! The number was &a');
+var x = testImport(x);
+print(x);

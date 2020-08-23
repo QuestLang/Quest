@@ -1,5 +1,4 @@
 // // // // // // // // // // //
-// // // // // // // // // //
 
 quest-src/
 
@@ -13,33 +12,6 @@ quest-src/math.qst
 Contains some mathematical functions and variables
 for use in Quest.
 
-// // // // // // // // // //
-// // // // // // // // // // //
-
-
-
-// // // // // // // // // // //
-------- Simple Functions -------
-// // // // // // // // // // //
-
-
-func Factorial(x){
-  if (x < 0) { error('Factorial cannot be negative'); }
-  var y = 1;
-  for (1 to x+1 as i) { y*i; }
-  return y;
-}
-
-func ToRad(x){
-  return x / 180 * Pi;
-}
-func ToDeg(x){
-  return x * 180 / Pi;
-}
-
-
-// // // // // // // // // // //
----------- Constants -----------
 // // // // // // // // // // //
 
 var Pi = 3.1415926535897932384626433832795;

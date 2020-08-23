@@ -2,9 +2,10 @@
 const OPERATORS = ['+', '-', '*', '/', '%', '^'];
 const COMPARERS = ['=', '<', '>', '|', '!'];
 const SEPARATORS = [';', '(', ')', '{', '}', '[', ']', ',', "'", '"', '$', '&', '//'];
-const KEYWORDS = ['print', 'error', 'input', 'clear', 'func', 'if', 'else', 'for', 'while', 'return', 'break'];
+const KEYWORDS = ['print', 'error', 'input', 'clear', 'func', 'if', 'else', 'for', 'while', 'return', 'break', 'continue', 'webserver'];
 const CONNECTORS = ['of', 'in', 'to', 'and', 'as'];
 const IDENTIFIERS = ['bool', 'const', 'var'];
+const QUEST = ['end', 'rerun', 'add'];
 const ARRAY_PARAMS = ['anyCase', 'any'];
 
 let inString = false, inConcat = false, deepConcat = false, inComment = false;
@@ -15,8 +16,8 @@ function reset(){
   currCol = 0;
   currGroup = '';
 
-  inString = false
-  inConcat = false
+  inString = false;
+  inConcat = false;
   deepConcat = false
   inComment = false;
 }
@@ -25,7 +26,9 @@ function reset(){
 function newToken(charGroup){
   this.token = { lexeme: '', chars: charGroup }
 
-  if(OPERATORS.includes(charGroup)){
+  if(QUEST.includes(charGroup)){
+    this.token.lexeme = 'quest';
+  } else if(OPERATORS.includes(charGroup)){
     this.token.lexeme = 'operator';
   } else if(COMPARERS.includes(charGroup)){
     this.token.lexeme = 'comparer';
@@ -66,7 +69,7 @@ function lexer(text){
     if(!inString) chars = chars.trim();
     if(!chars) continue;
 
-    if(!chars[chars.length-1].match(/[\;\'\"{\[\(\=\|\,\?\:\}]/)){
+    if(!chars[chars.length-1].match(/[\;{\[\(\=\|\,\?\:\}]/)){
       chars += ';';
     }
     currCol = 0;

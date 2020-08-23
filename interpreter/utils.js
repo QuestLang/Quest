@@ -1,4 +1,4 @@
-const errors = require('./errors');
+const errors = require('../quest-src/errors');
 const MathLexemeList = ['number', 'operator', 'separator', 'variable'];
 
 // Take Characters from line of Tokens
@@ -12,11 +12,33 @@ const takeChars = (line) => {
 // Check if Variable is Available
 function availableVar(variable, line, col){
   if(!variable) errors.expectedLiteral('a variable', line, col);
-  if(variable.match(/[^A-z0-9]/g)) errors.unavailableVar(variable, line, col); 
+  if(variable.match(/[^A-z0-9\.]/g)) errors.unavailableVar(variable, line, col); 
   if(variable[0].match(/[^A-z]/)) errors.numericVar(variable, line, col);
 
   return variable;
 }
+
+const findSetEnd = (tokens, open, close) => {
+    let setCount = 1;
+    let args = [];
+
+    // Check if in a Set
+    for(let token of tokens){
+      let oldToken = token;
+
+      // Check if at End of Character
+      if(!token) errors.expected(close, oldToken.line, oldToken.col);
+
+      // Find if Current Token is a Set
+      if(token.chars === open) setCount++;
+      if(token.chars === close) setCount--;
+
+      // Push Current Token into Expression
+      if(setCount == 0) break;
+      args.push(token);
+    }
+    return args;
+  }
 
 // Get Arguments from a List of Tokens
 function getArguments(line){
@@ -58,100 +80,67 @@ function getArguments(line){
 // Create a Stack of Evaluated Tokens
 const createStack = (tokens, type) => {
   let stack = [];
-  if(type === 'math'){
-    let mathStack = [];
 
-    // Loop Through Tokens to Create Stack
-    for(let i=0; i<tokens.length; i++){
-      let token = tokens[i];
-      
-      // Numbers
-      if(token.lexeme === 'number'){
-        mathStack.push(Number(token.chars));
-      
-      // Operators
-      } else if(token.lexeme === 'operator'){
-        mathStack.push(token.chars);
-      
-      // Separators
-      } else if(token.lexeme === 'separator'){
-        mathStack.push(token.chars);
-
-      // Calling Functions
-      } else if(token.lexeme === 'variable'){
-
-        if(tokens[i+1] && tokens[i+1].chars === '('){
-          if(!tokens[i+2]) errors.expected(')', tokens[i+1].line, tokens[i+1].col);
-          
-          let funcArgs = [];
-          let end;
-
-          // If It has Parameters
-          if(tokens[i+2].chars !== ')'){
-            let setCount = 1;
-
-            for(let j=0; j<tokens.slice(i+2).length; j++){
-              let thisToken = tokens[j+i+2];
-              if(thisToken.chars === '(') setCount++;
-              if(thisToken.chars === ')') setCount--;
-              if(setCount == 0){ end = j+i+2; break; }
-            }
-            if(!end) errors.expected(')', tokens[i+2].line, tokens[i+2].col);
-
-            let args = getArguments(tokens.slice(i+2, end));
-            
-            for(let j=0; j<args.length; j++){
-              let thisType = args[j].find(a => a.lexeme === 'string') ? 'string' : 'math';
-              args[j] = createStack(args[j], thisType);
-            }
-
-            funcArgs = args;
-          }
-
-          mathStack.push({
-            instruction: 'call',
-            name: tokens[i].chars,
-            args: funcArgs
-          });
-
-          i = end;
-      // Normal Variables
-        } else {
-          mathStack.push(token.chars);
-        }
-      }
-    }
-    stack.push({ type: 'math', stack: mathStack });
-  } else {
-    stack = createStringStack(tokens);
-  }
-
-  return stack;
-}
-const createStringStack = (tokens) => {
-  let stack = [];
   let mathStack = [];
-  
-  for(let token of tokens){
 
-    // If A Mathematical Token
-    if(MathLexemeList.includes(token.lexeme)){
-      mathStack.push(token); // Add to Stack of Maths
-    } else {
-
-      // Check if After a Mathematical Token
+  for(let i=0; i<tokens.length; i++){
+    let token = tokens[i];
+    
+    if(token.lexeme === 'string'){
       if(mathStack[0] !== undefined){
-        stack.push(createStack(mathStack, 'math')[0]);
+        stack.push({ type: 'math', stack: mathStack });
         mathStack = [];
       }
+      stack.push(token.chars);
+    } else if(token.lexeme === 'number'){
+      mathStack.push(Number(token.chars));
+    } else if(token.lexeme === 'operator'){
+      mathStack.push(token.chars);
+    } else if(token.lexeme === 'separator'){
+      mathStack.push(token.chars);
+    } else if(token.lexeme === 'variable'){
+      if(tokens[i+1] !== undefined 
+      && tokens[i+1].lexeme === 'separator'){
 
-      // Push String into Stack
-      stack.push({ type: 'string', stack: token.chars });
+        // Functions
+        if(tokens[i+1].chars === '('){
+
+          // No Parameters Given
+          if(tokens[i+2].chars === ')'){
+            mathStack.push({
+              instruction: 'call',
+              name: token.chars,
+              args: []
+            });
+            i += 2;
+          } else {
+          // Parameters Given
+            let tokened = tokens.slice(i+2);
+            let tokenArgs = findSetEnd(tokened, '(', ')');
+            let args = getArguments(tokenArgs);
+
+            for(let j=0; j<args.length; j++){
+              args[j] = createStack(args[j]);
+            }
+
+            mathStack.push({
+              instruction: 'call',
+              name: token.chars,
+              args: args
+            });
+
+            i += 2+tokenArgs.length;
+          }
+        }
+      } else {
+        mathStack.push({ instruction: 'var', name: token.chars });
+      }
     }
   }
 
-  // Add Final Math to Stack
-  if(mathStack[0] !== undefined) stack.push(createStack(mathStack, 'math')[0]);
+  if(mathStack[0] !== undefined){
+    stack.push({ type: 'math', stack: mathStack });
+  }
   return stack;
 }
 
