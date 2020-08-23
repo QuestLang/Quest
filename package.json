@@ -4,6 +4,7 @@
   "description": "*** Will be rewritten in C or C++ if winner of competition.",
   "main": "index.js",
   "dependencies": {
+    "node-fetch": "^2.6.0",
     "readline-sync": "^1.4.10"
   },
   "devDependencies": {},

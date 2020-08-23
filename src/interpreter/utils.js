@@ -1,4 +1,4 @@
-const errors = require('../quest-src/errors');
+const errors = require('../lib/errors');
 const MathLexemeList = ['number', 'operator', 'separator', 'variable'];
 
 // Take Characters from line of Tokens

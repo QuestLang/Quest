@@ -1,12 +1,16 @@
-const run = require('./runquest');
+const fs = require('fs');
+const run = require('./src/runquest');
+const importPackage = require('./src/getpackage');
+
+if(fs.existsSync('./packages')){
+  let allPackages = fs.readdirSync('./packages');
+  for(let thisPackage of allPackages){
+    run('packages/' + thisPackage);
+  }
+}
 
 // Run The Main Quest Files
-run('quest-src/math.qst');
+run('src/lib/math.qst');
 
 // User Generated
 run('main.qst');
-
-while(true){
-  let str = prompt('>');
-  if(str.slice(0, 4) === 'run ') run(str.slice(4));
-};

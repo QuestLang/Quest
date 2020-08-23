@@ -2,7 +2,7 @@
 const OPERATORS = ['+', '-', '*', '/', '%', '^'];
 const COMPARERS = ['=', '<', '>', '|', '!'];
 const SEPARATORS = [';', '(', ')', '{', '}', '[', ']', ',', "'", '"', '$', '&', '//'];
-const KEYWORDS = ['print', 'error', 'input', 'clear', 'func', 'if', 'else', 'for', 'while', 'return', 'break', 'continue', 'webserver'];
+const KEYWORDS = ['print', 'error', 'input', 'clear', 'func', 'if', 'else', 'for', 'while', 'return', 'break', 'continue', 'server'];
 const CONNECTORS = ['of', 'in', 'to', 'and', 'as'];
 const IDENTIFIERS = ['bool', 'const', 'var'];
 const QUEST = ['end', 'rerun', 'add'];
@@ -69,8 +69,8 @@ function lexer(text){
     if(!inString) chars = chars.trim();
     if(!chars) continue;
 
-    if(!chars[chars.length-1].match(/[\;{\[\(\=\|\,\?\:\}]/)){
-      chars += ';';
+    if(!chars[chars.length-1].match(/[\;{\'\"\[\(\=\|\,\?\:\}]/)){
+      if(!inString) chars += ';';
     }
     currCol = 0;
     

@@ -1,4 +1,4 @@
-const errors = require('../quest-src/errors');
+const errors = require('../lib/errors');
 const parseFuncs = require('./utils').parse;
 
 /********** Main Parsing Function **********/

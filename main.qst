@@ -1,4 +1,1 @@
-add('test.qst');
-
-var x = testImport(x);
-print(x);
+add('useless');

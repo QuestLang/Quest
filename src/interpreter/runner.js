@@ -1,10 +1,14 @@
-const errors = require('../quest-src/errors');
-const parseFuncs = require('./utils').parse;
 const readline = require('readline-sync');
 
+const errors = require('../lib/errors');
+const parseFuncs = require('./utils').parse;
+
+const ImportPackage = require('../getpackage');
 const RequireModule = require('../runquest');
-const MathFunctions = require('../quest-src/math');
-const StringFunctions = require('../quest-src/string');
+
+const MathFunctions = require('../lib/math');
+const StringFunctions = require('../lib/string');
+const FileFunctions = require('../lib/files');
 
 const MainFunctions = {
   ...MathFunctions,
@@ -333,15 +337,19 @@ function reset(){
 }
 
 /********** Main Running Function **********/
-function run(instructions){
-  for(let step of instructions){
+async function run(instructions){
+  for(let step of await instructions){
     switch(step.instruction){
       case 'import':
-        if(step.name.includes('.')){
-          RequireModule(step.name);
+        if(step.name.includes('.qst')){
+          await RequireModule(step.name);
+        } else if(step.name.includes('://')){
+          await ImportPackage.url(step.name, 'url');
         } else {
-          ObtainPackage(step.name);
+          await ImportPackage.pack(step.name);
+          await RequireModule('packages/' + step.name + '.qst');
         }
+        break;
       case 'clear':
         console.clear();
         break;
@@ -428,5 +436,4 @@ function run(instructions){
   }
 }
 
-exports.run = run;
-exports.reset = reset;
+module.exports = { run, reset }
