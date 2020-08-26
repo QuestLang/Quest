@@ -1,8 +1,6 @@
 // Contains Useful Maths Functions for Quest
 const errors = require('./errors');
 
-const Number = (x) => { return Number(x) }
-
 // Main Math Functions
 function sin(x){ return Math.sin(x) }
 function cos(x){ return Math.cos(x) }
@@ -26,14 +24,6 @@ function sign(x){ return Math.sign(x) }
 
 // Specialized Math Functions
 
-function factorial(x){
-  if(x < 0) errors.noNegative('Factorial');
-  return {
-    value: x == 0 ? 1 : x * Factorial(x-1),
-    initial: x
-  }
-}
-
 function random(min, max){
 
   random.int = function(min, max){
@@ -56,7 +46,7 @@ function random(min, max){
   }
   random.string = function(length){
     let code = '';
-    for(let i=0; i<length; i++) code += Random.Char().value;
+    for(let i=0; i<length; i++) code += random.char().value;
     return {
       value: code,
       length: length
@@ -76,6 +66,40 @@ function clamp(x, min, max){
   }
 }
 
+// Probability
+function factorial(x){
+  if(x < 0) errors.noNegative('factorial');
+  return {
+    value: x == 0 ? 1 : x * factorial(x-1).value,
+    initial: x
+  }
+}
+function doubleFactorial(x){
+  if(x < 0) errors.noNegative('doubleFactorial');
+  return {
+    value: x <= 1 ? 1 : x * factorial(x-1).value,
+    initial: x
+  }
+}
+function permutate(x, y){
+  return factorial(x)/factorial(x-y);
+}
+function combinate(x, y){
+  return factorial(x)/factorial(y)*factorial(x-y);
+}
+
+// Trigonometry
+function matrix2d(){
+  matrix2d.x = (rad) => {
+    return cos(rad);
+  }
+  matrix2d.y = (rad) => {
+    return sin(rad);
+  }
+}
+
+matrix2d();
+
 module.exports = {
   sin, cos, tan,
   arcsin, arccos, arctan,
@@ -83,5 +107,8 @@ module.exports = {
   sqrt, cbrt, root,
   floor, ceil,
   truncate, round,
-  random, clamp, factorial
+  random, clamp, factorial,
+  toRad, toDeg, sign,
+  doubleFactorial, permutate,
+  combinate, matrix2d
 }

@@ -60,34 +60,17 @@ function parser(tokens){
     end = tokens.slice(index).findIndex(a => a.chars === ';')+index;
     if(end - index == -1) end = -1;
 
-  /******* Main Quest Instructions *******/
-    if(token.lexeme == 'quest'){
-      if(token.chars == 'add'){
-        advance(1);
-        if(token.chars != '(') errors.expected('(', token.line, token.col);
-        advance(1);
-        if(!token) errors.expectedLiteral('an import name or directory', token.line, token.col);
-        let fileName = token.chars;
-        advance(1);
-        if(token.chars != ')') errors.expected(')', token.line, token.col);
-        advance(1);
-        if(token.chars != ';') errors.unexpToken(token.chars, token.line, token.col);
-
-        currInstruction.instruction = 'import';
-        currInstruction.name = fileName;
-        addInstruction(true);
-      }
-    }
-
   /******* Set Variable *******/
     else if(token.lexeme == 'identifier'){
+      let constant = token.chars === 'const';
 
       // Set and Retrieve Basic Information
       currInstruction.instruction = 'setvar';
       advance(1);
 
       currInstruction.name = token.chars;
-      parseFuncs.varbs(token.chars, token.line, token.col);
+
+      parseFuncs.varbs(token.chars, token.line, token.col, constant);
       advance(1);
 
       // Add to Instructions
@@ -112,7 +95,7 @@ function parser(tokens){
 
       // Set and Retrieve Basic Information
       let thisVar = token.chars;
-      parseFuncs.varbs(token.chars, token.line, token.chars);
+      parseFuncs.varbs(token.chars, token.line, token.col);
       advance(1);
 
       // Call a Function

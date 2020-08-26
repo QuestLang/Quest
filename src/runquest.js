@@ -12,10 +12,12 @@ function run(file, raw){
     let text = raw ? file : fs.readFileSync(file, 'utf-8');
 
     let tokens = text ? lexer.lexer(text) : [];
+    //console.log(tokens);
 
     let instructions = parser(tokens);
 
-    runner.run(instructions);
+    runner(instructions)
+
   } else {
     throw new Error("Quest File Error: " + file + ' is not a valid directory');
   }

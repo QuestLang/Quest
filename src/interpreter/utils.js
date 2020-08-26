@@ -1,6 +1,8 @@
 const errors = require('../lib/errors');
 const MathLexemeList = ['number', 'operator', 'separator', 'variable'];
 
+let constants = [];
+
 // Take Characters from line of Tokens
 const takeChars = (line) => {
   let endStr = '';
@@ -10,7 +12,10 @@ const takeChars = (line) => {
 }
 
 // Check if Variable is Available
-function availableVar(variable, line, col){
+function availableVar(variable, line, col, constant){
+  if(constants.includes(variable)) errors.reassignConst(variable, line, col);
+  if(constant) constants.push(variable);
+  
   if(!variable) errors.expectedLiteral('a variable', line, col);
   if(variable.match(/[^A-z0-9\.]/g)) errors.unavailableVar(variable, line, col); 
   if(variable[0].match(/[^A-z]/)) errors.numericVar(variable, line, col);
@@ -100,7 +105,8 @@ const createStack = (tokens, type) => {
       mathStack.push(token.chars);
     } else if(token.lexeme === 'variable'){
       if(tokens[i+1] !== undefined 
-      && tokens[i+1].lexeme === 'separator'){
+      && tokens[i+1].lexeme === 'separator'
+      && tokens[i+1].chars === '('){
 
         // Functions
         if(tokens[i+1].chars === '('){

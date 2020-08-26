@@ -1,1 +1,23 @@
-add('useless');
+func z(){
+  var b = 3;
+  b.min = 1;
+  b.max = 10;
+  factorial(time.ms()%10, $b.max);
+  b.range = 5;
+  return b;
+}
+
+var a = z();
+
+print('Value is &a');
+print('Type is &a.type');
+print('Min is &a.min');
+print('Max is &a.max');
+print('Range is &a.range');
+
+print('\n\n\n');
+print('Start');
+delay(1000);
+print('Middle');
+delay(1000);
+print('End');

@@ -5,8 +5,9 @@ const SEPARATORS = [';', '(', ')', '{', '}', '[', ']', ',', "'", '"', '$', '&', 
 const KEYWORDS = ['print', 'error', 'input', 'clear', 'func', 'if', 'else', 'for', 'while', 'return', 'break', 'continue', 'server'];
 const CONNECTORS = ['of', 'in', 'to', 'and', 'as'];
 const IDENTIFIERS = ['bool', 'const', 'var'];
-const QUEST = ['end', 'rerun', 'add'];
+const QUEST = ['end', 'rerun'];
 const ARRAY_PARAMS = ['anyCase', 'any'];
+const VALUES = ['true', 'false'];
 
 let inString = false, inConcat = false, deepConcat = false, inComment = false;
 
@@ -40,6 +41,8 @@ function newToken(charGroup){
     this.token.lexeme = 'connector';
   } else if(KEYWORDS.includes(charGroup)){
     this.token.lexeme = 'keyword';
+  } else if(VALUES.includes(charGroup)){
+    this.token.lexeme = 'value';
   } else if(inString){
     this.token.lexeme = 'string';
   } else if(Number(charGroup) == charGroup){
@@ -80,16 +83,26 @@ function lexer(text){
       if(!inComment){
         // String Methods
         if(char.match(/[\'\"]/)){
-          if(currGroup) tokens.push(newToken(currGroup));
-          inString = !inString;
-          if(inConcat) inConcat = deepConcat = inString = false;
-          continue;
+          if(currGroup[currGroup.length-1] !== '\\'){
+            if(currGroup) tokens.push(newToken(currGroup));
+            inString = !inString;
+            if(inConcat) inConcat = deepConcat = inString = false;
+            continue;
+          } else {
+            currGroup = currGroup.substring(0, currGroup.length-1);
+            currGroup += char;
+          }
 
         // Concatenation for Strings
         } else if(char.match(/\&/gi)){
-          if(currGroup) tokens.push(newToken(currGroup));
-          inString = false;
-          inConcat = true;
+          if(currGroup[currGroup.length-1] !== '\\'){
+            if(currGroup) tokens.push(newToken(currGroup));
+            inString = false;
+            inConcat = true;
+          } else {
+            currGroup = currGroup.substring(0, currGroup.length-1);
+            currGroup += char;
+          }
 
         // Keywords and Variables behind a Space
         } else if(char.match(/\s/gi) && !inString){
