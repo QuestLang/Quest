@@ -27,7 +27,9 @@ function reset(){
 function newToken(charGroup){
   this.token = { lexeme: '', chars: charGroup }
 
-  if(QUEST.includes(charGroup)){
+  if(inString){
+    this.token.lexeme = 'string';
+  } else if(QUEST.includes(charGroup)){
     this.token.lexeme = 'quest';
   } else if(OPERATORS.includes(charGroup)){
     this.token.lexeme = 'operator';
@@ -43,8 +45,6 @@ function newToken(charGroup){
     this.token.lexeme = 'keyword';
   } else if(VALUES.includes(charGroup)){
     this.token.lexeme = 'value';
-  } else if(inString){
-    this.token.lexeme = 'string';
   } else if(Number(charGroup) == charGroup){
     this.token.lexeme = 'number';
   } else {
@@ -72,12 +72,10 @@ function lexer(text){
     if(!inString) chars = chars.trim();
     if(!chars) continue;
 
-    if(!chars[chars.length-1].match(/[\;{\'\"\[\(\=\|\,\?\:\}]/)){
-      if(!inString) chars += ';';
-    }
     currCol = 0;
     
-    for(let char of chars){
+    for(let i=0; i<chars.length; i++){
+      let char = chars[i]
       currCol++;
 
       if(!inComment){
@@ -149,6 +147,13 @@ function lexer(text){
           }
         } else {
           currGroup = '';
+        }
+      }
+
+      // Add Semicolon to End
+      if(i == chars.length-1){
+        if(!char.match(/[\;{\'\"\[\(\=\|\,\?\:\}]/)){
+          if(!inString) chars += ';';
         }
       }
     }

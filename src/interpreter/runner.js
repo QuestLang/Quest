@@ -41,14 +41,12 @@ function deepClone(obj) {
 
 // Compare Statements
 async function compare(stack){
-  if(!stack.find(a => a.lexeme === 'comparer')){
-    let type = stack.find(a => a.lexeme === 'string') ? 'string' : 'math';
-    return await process(parseFuncs.stack(stack, type), type);
-  }
+  let comparer = stack.findIndex(a => a.line !== undefined);
 
-  let comparer = stack.findIndex(a => a.lexeme === 'comparer');
-  let first = await compare(stack.slice(0, comparer));
-  let last = await compare(stack.slice(comparer+1));
+  let firstType = stack[comparer-1].find(a => a.type !== 'math') ? 'string' : 'math';
+  let first = await process(stack[comparer-1], firstType);
+  let lastType = stack[comparer+1].find(a => a.type !== 'math') ? 'string' : 'math';
+  let last = await process(stack[comparer+1], lastType);
   
   if(stack[comparer].chars === '='){
     return first === last;
@@ -108,7 +106,6 @@ async function call(name, args){
       thisFunction = thisFunction[allPieces[i]];
     }
     returnValue = await thisFunction(getVar(main), ...allArgs);
-    
     setVar(main, returnValue, getVar(main, true).type);
     return returnValue;
 
@@ -178,6 +175,7 @@ function setVar(name, value, type){
     }
     thisVar[allPieces[allPieces.length-1]] = value;
   } else {
+    if(String(value) === value) type = 'string';
     variables[name] = {
       name: name,
       value: value,
@@ -234,6 +232,7 @@ async function evaluateMath(oldStack){
     if(mathStack[1] === '*') return mathStack[0]*mathStack[2];
     if(mathStack[1] === '/') return mathStack[0]/mathStack[2];
     if(mathStack[1] === '%') return mathStack[0]%mathStack[2];
+    if(mathStack[1] === '^') return mathStack[0]**mathStack[2];
   }
 
   // Loop through Stack
@@ -319,6 +318,8 @@ async function operate(name, operator, value){
   if(operator === '-') variables[name].value -= nval;
   if(operator === '*') variables[name].value *= nval;
   if(operator === '/') variables[name].value /= nval;
+  if(operator === '%') variables[name].value %= nval;
+  if(operator === '^') variables[name].value **= nval;
 }
 
 // Process Tokens Into Value
@@ -340,6 +341,20 @@ async function process(stack, type, raw){
   }
 }
 
+function unescape(text){
+  text = text.replace(/\\n/g, '\n');
+  text = text.replace(/\\b/g, '\b');
+  text = text.replace(/\\t/g, '\t');
+  text = text.replace(/\\\\/g, '\\');
+  text = text.replace(/\\'/g, '\'');
+  text = text.replace(/\\"/g, '\"');
+
+  // windows gang
+  text = text.replace(/\\r/g, '\r');
+
+  return text;
+}
+
 /********** Main Running Function **********/
 async function run(instructions){
   for(let step of instructions){
@@ -355,7 +370,7 @@ async function run(instructions){
           type = 'math';
         }
 
-        await setVar(step.name, value, type);
+        await setVar(step.name, await getValue(value), type);
         break;
       case 'changevar':
         let thisValue = await process(step.expression, step.type, true);
@@ -370,7 +385,7 @@ async function run(instructions){
         break;
       case 'print':
         let printValue = String(await process(step.expression, step.type));
-        printValue = JSON.parse('"'+printValue+'"');
+        printValue = unescape(printValue);
         console.log(printValue);
         break;
       case 'input':

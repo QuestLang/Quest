@@ -38,7 +38,9 @@ function time(){
     currTime = Date.now();
   }
   time.end = () => {
-    return Date.now() - currTime;
+    let elapsed = Date.now() - currTime;
+    elapsed -= Math.round(elapsed/1000*3); // Errors
+    return elapsed;
   }
 
   time.nano = () => {

@@ -134,7 +134,7 @@ function parser(tokens){
         currInstruction.expression = parseFuncs.stack(expression);
       
       // Operator Assigments
-      } else if(token.chars.match(/[\+\-\*\/]/)){
+      } else if(token.chars.match(/[\+\-\*\/\%\^]/)){
         let thisOperator = token.chars;
         
         currInstruction.instruction = 'operate';
@@ -312,7 +312,27 @@ function parser(tokens){
         advance(-1);
         errors.expected('(', token.line, token.col);
       }
-      let ifArgs = findSetEnd('(', ')');
+
+      let ifTokens = findSetEnd('(', ')');
+      let ifArgs = [];
+      let currStack = [];
+      for(let i=0; i<ifTokens.length; i++){
+        let curr = ifTokens[i];
+        if(curr.lexeme === 'comparer' ||
+        (curr.chars === '&' && curr.lexeme === 'separator')){
+          if(currStack !== []){
+            ifArgs.push(parseFuncs.stack(currStack));
+          }
+          ifArgs.push(curr);
+          currStack = [];
+        } else {
+          currStack.push(curr);
+        }
+      }
+      if(currStack !== []){
+        ifArgs.push(parseFuncs.stack(currStack));
+      }
+
 
       advance(1);
       if(token.chars != '{' && token.lexeme == 'separator'){
@@ -334,8 +354,27 @@ function parser(tokens){
         advance(-1);
         errors.expected('(', token.line, token.col);
       }
-      let whileArgs = findSetEnd('(', ')');
 
+      let whileTokens = findSetEnd('(', ')');
+      let whileArgs = [];
+      let currStack = [];
+      for(let i=0; i<whileTokens.length; i++){
+        let curr = whileTokens[i];
+        if(curr.lexeme === 'comparer' ||
+        (curr.chars === '&' && curr.lexeme === 'separator')){
+          if(currStack !== []){
+            whileArgs.push(parseFuncs.stack(currStack));
+          }
+          whileArgs.push(curr);
+          currStack = [];
+        } else {
+          currStack.push(curr);
+        }
+      }
+      if(currStack !== []){
+        whileArgs.push(parseFuncs.stack(currStack));
+      }
+      
       advance(1);
       if(token.chars != '{' && token.lexeme == 'separator'){
         advance(-1);

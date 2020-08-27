@@ -1,0 +1,49 @@
+#f calcPi(){
+  #o a = 1;
+  #o b = 1;
+
+  #j(1 = 1){
+    #i(1 to 10){
+      #i(1 to 1000){
+        b+2;
+        a-1/b;
+        b+2;
+        a+1/b;
+      }
+      #b(a*4);
+    }
+    #d('keep going? ', x);
+    #g(x = 'no'){ #l; }
+  }
+}
+#f calcE(method){
+  #o a = 1;
+  #o b = 1;
+
+  #j(1 = 1){
+    #i(1 to 10){
+      #i(1 to 1000){
+        b+1;
+        a = (1+1/b)^b;
+      }
+      #b(a);
+    }
+    #d('keep going? ', x);
+    #g(x = 'no'){ #l; }
+  }
+}
+#f calcEFast(){
+  #o a = 2;
+  #o b = 1;
+  #j(1 = 1){
+    #i(1 to 10){
+      #i(1 to 2){
+        b+1;
+        a+1/factorial(b);
+      }
+      #b(a);
+    }
+    #d('keep going? ', x);
+    #g(x = 'no'){ #l; }
+  }
+}

@@ -1,0 +1,46 @@
+func encode(data){
+  var changedData = data;
+  changedData.replace('#', '#a');
+
+  changedData.replace('print', '#b');
+  changedData.replace('error', '#c');
+  changedData.replace('input', '#d');
+  changedData.replace('clear', '#e');
+  changedData.replace('func', '#f');
+  changedData.replace('if', '#g');
+  changedData.replace('else', '#h');
+  changedData.replace('for', '#i');
+  changedData.replace('while', '#j');
+  changedData.replace('return', '#k');
+  changedData.replace('break', '#l');
+  changedData.replace('continue', '#m');
+  changedData.replace('and', '#n');
+  changedData.replace('var', '#o');
+  changedData.replace('const', '#p');
+  changedData.replace('bool', '#q');
+
+  return changedData;
+}
+func decode(data){
+  var changedData = data;
+
+  changedData.replace('#q', 'bool');
+  changedData.replace('#p', 'const');
+  changedData.replace('#o', 'var');
+  changedData.replace('#n', 'and');
+  changedData.replace('#m', 'continue');
+  changedData.replace('#l', 'break');
+  changedData.replace('#k', 'return');
+  changedData.replace('#j', 'while');
+  changedData.replace('#i', 'for');
+  changedData.replace('#h', 'else');
+  changedData.replace('#g', 'if');
+  changedData.replace('#f', 'func');
+  changedData.replace('#e', 'clear');
+  changedData.replace('#d', 'input');
+  changedData.replace('#c', 'error');
+  changedData.replace('#b', 'print');
+  changedData.replace('#a', '#');
+  
+  return changedData;
+}
