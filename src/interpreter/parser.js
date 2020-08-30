@@ -179,7 +179,10 @@ function parser(tokens){
 
       let args = parseFuncs.argms(findSetEnd('(', ')'));
       currInstruction.expression = parseFuncs.stack(args[0], 'string');
-      currInstruction.variable = parseFuncs.chars(args[1], 'string');
+      if(args[1]){
+        currInstruction.variable = parseFuncs.chars(args[1], 'string');
+      }
+      
       addInstruction();
     }
 
@@ -240,7 +243,7 @@ function parser(tokens){
 
       // Add the Instructions to Array
       let forInstructions = parser(findSetEnd('{', '}'));
-
+      
       if(varName){
         forInstructions.push({
           instruction: 'operate',
@@ -248,6 +251,7 @@ function parser(tokens){
           expression: parseFuncs.stack([{ lexeme: 'number', chars: 1 }], 'math'),
           operator: '+'
         });
+        currInstruction.usingVar = true;
       }
       currInstruction.instruction = 'loop';
       currInstruction.start = parseFuncs.stack(forStart, 'math');
@@ -340,6 +344,16 @@ function parser(tokens){
         errors.expected('{', token.line, token.col);
       }
       let ifInstructions = parser(findSetEnd('{', '}'));
+      advance(1);
+      if(token.lexeme === 'keyword' && token.chars === 'else'){
+        advance(1);
+        if(token.chars !== '{' || token.lexeme !== 'separator'){
+          errors.expected('{', token.line, token.col);
+        }
+
+        let elseInstructions = parser(findSetEnd('{', '}'));
+        currInstruction.elseInstructions = elseInstructions;
+      }
 
       currInstruction.instruction = 'if';
       currInstruction.comparison = ifArgs;

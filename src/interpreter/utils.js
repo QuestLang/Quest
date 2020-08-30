@@ -155,6 +155,7 @@ module.exports = {
     stack: createStack,
     chars: takeChars,
     argms: getArguments,
-    varbs: availableVar
+    varbs: availableVar,
+    endst: findSetEnd
   }
 }

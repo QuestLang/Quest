@@ -2,7 +2,7 @@ const ImportPackage = require('../getpackage');
 const RequireModule = require('../runquest');
 const fs = require('fs');
 
-async function add(file, name){
+async function Import(file, name){
   if(file.includes('.qst')){
     await RequireModule(file, name);
   } else if(file.includes('://')){
@@ -12,80 +12,80 @@ async function add(file, name){
   }
 }
 
-function files(){
-  files.read = (file) => {
+function Files(){
+  Files.read = (file) => {
     return fs.readFileSync(file);
   }
-  files.write = (file, text) => {
+  Files.write = (file, text) => {
     fs.writeFileSync(file, text);
   }
-  files.createFile = (file) => {
+  Files.createFile = (file) => {
     fs.writeFileSync(file, '');
   }
-  files.createFolder = (folder) => {
-    fs.mkdirSync(folder);
+  Files.createFolder = (folder) => {
+    if(!fs.existsSync(folder)) fs.mkdirSync(folder);
   }
-  files.size = (file) => {
+  Files.size = (file) => {
     return fs.statSync(file).size;
   }
 }
-files();
+Files();
 
 let currTime;
-function time(){
+function Time(){
   let dt = new Date();
-  time.start = () => {
+  Time.start = () => {
     currTime = Date.now();
   }
-  time.end = () => {
+  Time.end = () => {
     let elapsed = Date.now() - currTime;
     elapsed -= Math.round(elapsed/1000*3); // Errors
     return elapsed;
   }
 
-  time.nano = () => {
+  Time.nano = () => {
     return process.hrtime()[1];
   }
-  time.micro = () => {
+  Time.micro = () => {
     return Math.floor(process.hrtime()[1]/1000);
   }
-  time.ms = () => {
+  Time.ms = () => {
     return Date.now();
   }
-  time.s = () => {
+  Time.s = () => {
     return Math.floor(Date.now()/1000);
   }
-  time.m = () => {
+  Time.m = () => {
     return Math.floor(Date.now()/60000);
   }
-  time.h = () => {
+  Time.h = () => {
     return Math.floor(Date.now()/3600000);
   }
-  time.day = () => {
+  Time.day = () => {
     return dt.getDay()+1;
   }
-  time.date = () => {
+  Time.date = () => {
     return dt.getDate();
   }
-  time.month = () => {
+  Time.month = () => {
     return dt.getMonth()+1;
   }
-  time.year = () => {
+  Time.year = () => {
     return dt.getFullYear();
   }
-  time.zone = () => {
+  Time.zone = () => {
     return dt.getTimezoneOffset();
   }
-  time.dayOfYear = () => {
+  Time.dayOfYear = () => {
     return Math.floor((dt - new Date(dt.getFullYear(), 0, 0)) / 1000 / 60 / 60 / 24);
   }
-  time.weekOfYear = () => {
-    return Math.floor(time.dayOfYear()/7);
+  Time.weekOfYear = () => {
+    return Math.floor(Time.dayOfYear()/7);
   }
   
-  return time.ms();
+  return Time.ms();
 }
-time();
+Time();
 
 async function delay(ms){
   await new Promise((resolve) => {
@@ -94,5 +94,5 @@ async function delay(ms){
 }
 
 module.exports = {
-  add, time, files, delay
+  Import, Time, Files, delay
 }

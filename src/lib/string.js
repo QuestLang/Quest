@@ -2,9 +2,7 @@
 
 const errors = require('./errors');
 
-const String = (x) => { return String(x) }
-
-function replace(string, replacer, replacement){
+function Replace(string, replacer, replacement){
   let i = 0;
   for(let i=replacer.length; i<string.length+1; i++){
     let currStr = string.slice(i-replacer.length, i);
@@ -17,49 +15,48 @@ function replace(string, replacer, replacement){
   }
   return string;
 }
-function slice(string, start, end){
+function Slice(string, start, end){
   if(!end)
   return string.slice(start, end+1);
 }
-function contains(string, set){
+function Contains(string, set){
   return string.includes(set);
 }
-function index(string, chars){
+function Index(string, chars){
   return string.indexOf(chars);
 }
-function trim(string){
+function Trim(string){
   return string.trim();
 }
-function trimLeft(string){
+function TrimLeft(string){
   return string.trimLeft();
 }
-function trimRight(string){
+function TrimRight(string){
   return string.trimRight();
 }
-function upper(string){
+function Upper(string){
   return string.toUpperCase();
 }
-function lower(string){
+function Lower(string){
   return string.toLowerCase();
 }
-function startsWith(string, chars){
+function StartsWith(string, chars){
   return string.startsWith(chars);
 }
-function endsWith(string, chars){
+function EndsWith(string, chars){
   return string.endsWith(chars);
 }
-function capitalize(string){
+function Capitalize(string){
   return string[0].toUpperCase() + string.slice(1);
 }
-function reverse(string){
+function Reverse(string){
   return string.split('').reverse().join('');
 }
 
 module.exports = {
-  String,
-  slice, replace, contains,
-  index, trim, trimLeft,
-  trimRight, upper, lower,
-  startsWith, endsWith,
-  capitalize, reverse
+  Slice, Replace, Contains,
+  Index, Trim, TrimLeft,
+  TrimRight, Upper, Lower,
+  StartsWith, EndsWith,
+  Capitalize, Reverse
 }

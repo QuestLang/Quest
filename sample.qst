@@ -1,6 +1,5 @@
 // Comments Are Enclosed in 2 Double Slashes //
 
-
 var x = 'test string';
 var y = 3  // Semi-colons are optional //
 
@@ -38,7 +37,7 @@ print('\n');
 // While Loops //
 var i = 2;
 
-while(i < factorial(6)){
+while(i < Factorial(6)){
   i^2;
   print(i);
 }
@@ -48,38 +47,46 @@ print('\n');
 // Library Functions //
 var z = 3;
 
-z = arcsin(0.87);
+z = Arcsin(0.87);
 print('Arcsin of 0.87 is &z');
 
-z = random.string(4);
+z = Random.string(4);
 print('One random string is &z');
 
-z = time.micro();
-print('&z  microseconds have passed this second');
+z = Time.micro();
+print('&z  microseconds have passed this second \n');
 
-z = files.read('box.txt');
-print('box.txt says &z');
+z = Files.read('testfile.txt');
+print('testfile.txt says `&z `');
 
-z = z.replace('hi', 'bye');
-files.write('box.txt', z);
-print('box.txt now says &z');
+//
+Print 'what do you want to replace' and set the
+response to the variable replacer
+//
+input('What do you want to replace? ', replacer);
+input('What do you want to replace &replacer  with? ', replacement);
+
+z = z.Replace(replacer, replacement);
+Files.write('testfile.txt', z);
+print('testfile.txt now says &z');
 
 print('\n');
 
 
 // Delays //
 
-time.start();
+input('What should the delay be (milliseconds)? ', wait);
+Time.start();
 print('Start');
 
-delay(2020);
+delay(wait);
 
 print('End');
-var timePassed = time.end();
+var timePassed = Time.end();
 
 print('That delay was &timePassed  milliseconds\n');
 
-delay(800);
+input('Press enter to continue');
 
 
 //////
@@ -91,7 +98,7 @@ language takes it to a whole other level.
 Check this out:
 //////
 
-var p = random.int(0, 10);
+var p = Random.int(0, 10);
 
 print('The type of variable p is &p.type');
 
@@ -132,5 +139,5 @@ r.randomStringBecuaseWhyNot = 'bye world';
 print(r.randomStringBecuaseWhyNot);
 
 var v = 'hi there this is forwards';
-v.reverse();
+v.Reverse();
 print(v);

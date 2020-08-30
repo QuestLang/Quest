@@ -1,0 +1,29 @@
+func testFunction(num){
+  var b = num+1;
+  b.initial = num;
+  b.hello = 'world';
+  b.hello.lol = 'no';
+  b.hello.lol.a = 'no';
+  b.hello.lol.a.b = 'no';
+  b.hello.lol.a.b.c = 'yes';
+  return b;
+}
+
+var a = testFunction(6);
+print(a);
+print(a.type);
+print(a.hello);
+print(a.hello.type);
+print(a.hello.lol.a.b.c);
+
+if(0){
+  print('aaasdfasdfadfsdfsdf');
+}
+
+print('\n');
+
+var c = Random.int(2, 38);
+print('The value of c is &c');
+print('The minimum value of c is &c.min');
+print('The maximum value of c is &c.max');
+print('The number &c.range  is the range of c');

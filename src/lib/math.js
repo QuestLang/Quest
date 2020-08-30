@@ -2,62 +2,66 @@
 const errors = require('./errors');
 
 // Main Math Functions
-function sin(x){ return Math.sin(x) }
-function cos(x){ return Math.cos(x) }
-function tan(x){ return Math.tan(x) }
-function arcsin(x){ return Math.asin(x) }
-function arccos(x){ return Math.acos(x) }
-function arctan(x){ return Math.atan(x) }
-function sinh(x){ return Math.sinh(x) }
-function cosh(x){ return Math.cosh(x) }
-function tanh(x){ return Math.tan(x) }
-function sqrt(x){ return Math.sqrt(x) }
-function cbrt(x){ return Math.cbrt(x) }
-function root(x, y){ return Math.pow(x, 1/y) }
-function floor(x){ return Math.floor(x) }
-function ceil(x){ return -Math.floor(-x) }
-function truncate(x){ return Math.trunc(x) }
-function round(x){ return Math.round(x) }
-function toRad(x){ return x * Math.PI / 180 }
-function toDeg(x){ return x * 180 / Math.PI }
-function sign(x){ return Math.sign(x) }
+function Sin(x){ return Math.sin(x) }
+function Cos(x){ return Math.cos(x) }
+function Tan(x){ return Math.tan(x) }
+function Arcsin(x){ return Math.asin(x) }
+function Arccos(x){ return Math.acos(x) }
+function Arctan(x){ return Math.atan(x) }
+function Sinh(x){ return Math.sinh(x) }
+function Cosh(x){ return Math.cosh(x) }
+function Tanh(x){ return Math.tan(x) }
+function Sqrt(x){ return Math.sqrt(x) }
+function Cbrt(x){ return Math.cbrt(x) }
+function Root(x, y){ return Math.pow(x, 1/y) }
+function Floor(x){ return Math.floor(x) }
+function Ceil(x){ return -Math.floor(-x) }
+function Round(x){ return Math.round(x) }
+function ToRad(x){ return x * Math.PI / 180 }
+function ToDeg(x){ return x * 180 / Math.PI }
+function Sign(x){ return Math.sign(x) }
+function Pos(x){ return Math.abs(x) }
+function Neg(x){ return -Math.abs(x) }
+function Truncate(x, y){
+  if(!y) y=0; return Math.trunc(x*10**y)/10**y;
+}
 
 // Specialized Math Functions
 
-function random(min, max){
+function Random(min, max){
 
-  random.int = function(min, max){
+  Random.int = function(min, max){
     return {
-      value: floor(Math.random()*(max-min+1)+min),
-      min: min, max: max, range: max - min
+      value: Floor(Math.random()*(max-min+1)+min),
+      min: min, max: max, range: max - min + 1
     }
   }
-  random.float = function(min, max){
+  Random.float = function(min, max){
     return {
       value: Math.random()*(max-min)+min,
       min: min, max: max, range: max - min
     }
   }
-  random.char = function(){
-    let randInt = floor(random.int(97, 122).value);
+  Random.char = function(){
+    let randInt = Floor(Random.int(97, 122).value);
     return {
       value: String.fromCharCode(randInt)
     }
   }
-  random.string = function(length){
+  Random.string = function(length){
     let code = '';
-    for(let i=0; i<length; i++) code += random.char().value;
+    for(let i=0; i<length; i++) code += Random.char().value;
     return {
       value: code,
       length: length
     }
   }
 
-  return random.float(min, max);
+  return Random.float(min, max);
 }
-random();
+Random();
 
-function clamp(x, min, max){
+function Clamp(x, min, max){
   return {
     value: Math.min(Math.max(min, x), max),
     min: min,
@@ -67,48 +71,47 @@ function clamp(x, min, max){
 }
 
 // Probability
-function factorial(x){
+function Factorial(x){
   if(x < 0) errors.noNegative('factorial');
   return {
-    value: x == 0 ? 1 : x * factorial(x-1).value,
+    value: x == 0 ? 1 : x * Factorial(x-1).value,
     initial: x
   }
 }
-function doubleFactorial(x){
+function DoubleFactorial(x){
   if(x < 0) errors.noNegative('doubleFactorial');
   return {
-    value: x <= 1 ? 1 : x * factorial(x-1).value,
+    value: x <= 1 ? 1 : x * Factorial(x-1).value,
     initial: x
   }
 }
-function permutate(x, y){
-  return factorial(x)/factorial(x-y);
+function Permutate(x, y){
+  return Factorial(x)/Factorial(x-y);
 }
-function combinate(x, y){
-  return factorial(x)/factorial(y)*factorial(x-y);
+function Combinate(x, y){
+  return Factorial(x)/Factorial(y)*Factorial(x-y);
 }
 
 // Trigonometry
-function matrix2d(){
-  matrix2d.x = (rad) => {
-    return cos(rad);
+function Matrix2d(){
+  Matrix2d.x = (rad) => {
+    return Cos(rad);
   }
-  matrix2d.y = (rad) => {
-    return sin(rad);
+  Matrix2d.y = (rad) => {
+    return Sin(rad);
   }
 }
-
-matrix2d();
+Matrix2d();
 
 module.exports = {
-  sin, cos, tan,
-  arcsin, arccos, arctan,
-  sinh, cosh, tanh,
-  sqrt, cbrt, root,
-  floor, ceil,
-  truncate, round,
-  random, clamp, factorial,
-  toRad, toDeg, sign,
-  doubleFactorial, permutate,
-  combinate, matrix2d
+  Sin, Cos, Tan,
+  Arcsin, Arccos, Arctan,
+  Sinh, Cosh, Tanh,
+  Sqrt, Cbrt, Root,
+  Floor, Ceil, Pos, Neg,
+  Truncate, Round,
+  Random, Clamp, Factorial,
+  ToRad, ToDeg, Sign,
+  DoubleFactorial, Permutate,
+  Combinate, Matrix2d
 }

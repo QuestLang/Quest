@@ -1,13 +1,11 @@
 // TOKENS
 const OPERATORS = ['+', '-', '*', '/', '%', '^'];
 const COMPARERS = ['=', '<', '>', '|', '!'];
-const SEPARATORS = [';', '(', ')', '{', '}', '[', ']', ',', "'", '"', '$', '&', '//'];
-const KEYWORDS = ['print', 'error', 'input', 'clear', 'func', 'if', 'else', 'for', 'while', 'return', 'break', 'continue', 'server'];
+const SEPARATORS = [';', '(', ')', '[', ']', '{', '}', ',', "'", '"', '$', '&', '//'];
+const KEYWORDS = ['print', 'error', 'input', 'clear', 'func', 'if', 'else', 'for', 'while', 'return', 'break', 'continue', 'global'];
 const CONNECTORS = ['of', 'in', 'to', 'and', 'as'];
-const IDENTIFIERS = ['bool', 'const', 'var'];
-const QUEST = ['end', 'rerun'];
+const IDENTIFIERS = ['const', 'var'];
 const ARRAY_PARAMS = ['anyCase', 'any'];
-const VALUES = ['true', 'false'];
 
 let inString = false, inConcat = false, deepConcat = false, inComment = false;
 
@@ -19,7 +17,7 @@ function reset(){
 
   inString = false;
   inConcat = false;
-  deepConcat = false
+  deepConcat = false;
   inComment = false;
 }
 
@@ -29,8 +27,6 @@ function newToken(charGroup){
 
   if(inString){
     this.token.lexeme = 'string';
-  } else if(QUEST.includes(charGroup)){
-    this.token.lexeme = 'quest';
   } else if(OPERATORS.includes(charGroup)){
     this.token.lexeme = 'operator';
   } else if(COMPARERS.includes(charGroup)){
@@ -43,8 +39,6 @@ function newToken(charGroup){
     this.token.lexeme = 'connector';
   } else if(KEYWORDS.includes(charGroup)){
     this.token.lexeme = 'keyword';
-  } else if(VALUES.includes(charGroup)){
-    this.token.lexeme = 'value';
   } else if(Number(charGroup) == charGroup){
     this.token.lexeme = 'number';
   } else {

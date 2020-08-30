@@ -1,0 +1,7 @@
+input('How long do you want to delay this (ms)?', length);
+
+Time.start();
+delay(Number(length));
+print('That delay was &Time.end()  milliseconds');
+
+input('Continue?');

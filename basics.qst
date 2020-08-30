@@ -1,0 +1,42 @@
+print('This is a simple print statement');
+input('What is your name? ', name);
+
+// Input without a variable parameter pauses script //
+// One space to end concatenation //
+
+input('Hi &name  are you ready to continue? ');
+
+
+var a = 2;
+
+print('\nVariable a is currently &a  but if we add 2');
+a+2;
+print('Variable a is now &a');
+
+var b = Sin(a);
+print('The sin of &a  is &b');
+
+input('\nGuess what Pi is: ', piGuess);
+
+const diff = Truncate(Pos(Pi - piGuess), 8);
+const truncPi = Truncate(Pi, 8);
+print('Pi is actually &truncPi , you were &diff  off');
+
+input('\nReady to move to loops? ');
+
+for(0 to 4){
+  print('We are in a loop');
+}
+for(4 to 0){
+  print('We are in a descending loop');
+}
+for(0 to 6 as i){
+  print('We are in the &i  iteration of this loop');
+}
+
+var c = 50;
+var d = 2;
+while(c > d){
+  d^2;
+  print('D is now &d');
+}

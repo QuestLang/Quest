@@ -43,6 +43,11 @@ function deepClone(obj) {
 async function compare(stack){
   let comparer = stack.findIndex(a => a.line !== undefined);
 
+  if(stack[1] === undefined){
+    let type = stack[0].find(a => a.type !== 'math') ? 'string' : 'math';
+    return await process(stack[0], type);
+  }
+  
   let firstType = stack[comparer-1].find(a => a.type !== 'math') ? 'string' : 'math';
   let first = await process(stack[comparer-1], firstType);
   let lastType = stack[comparer+1].find(a => a.type !== 'math') ? 'string' : 'math';
@@ -90,7 +95,7 @@ async function call(name, args){
     returnValue = await thisFunction(...allArgs);
     if(varbName){
       let varbType = Number(returnValue) === returnValue ? 'math' : 'string';
-      setVar(varbName, returnValue, varbType);
+      await setVar(varbName, returnValue, varbType);
     } else {
       return returnValue;
     }
@@ -106,7 +111,7 @@ async function call(name, args){
       thisFunction = thisFunction[allPieces[i]];
     }
     returnValue = await thisFunction(getVar(main), ...allArgs);
-    setVar(main, returnValue, getVar(main, true).type);
+    await setVar(main, returnValue, getVar(main, true).type);
     return returnValue;
 
   // User Created Functions
@@ -146,53 +151,64 @@ async function call(name, args){
 }
 function getVar(name, raw){
   if(!name) errors.expectedLiteral('a name');
-  if(name.match(/\./g)){
-    let allPieces = name.split('.');
-    let main = allPieces[0];
-    let thisVar = variables[main];
-    for(let i=1; i<allPieces.length; i++){
-      thisVar = thisVar[allPieces[i]]
-    }
 
-    if(!variables[main]) errors.variableNotFound(main);
-    return variables[main][allPieces[1]];
-  } else {
-    if(!variables[name]) errors.variableNotFound(name);
-    let varb = variables[name];
-    if(raw) return varb;
-    if(varb.type === 'math') return Number(varb.value);
-    if(varb.type === 'string') return String(varb.value);
+  let allPieces = name.split('.');
+  let main = allPieces[0];
+  let thisVar = variables[main];
+  for(let i=1; i<allPieces.length; i++){
+    thisVar = thisVar[allPieces[i]]
   }
+
+  if(!variables[main]) errors.variableNotFound(main);
+  if(raw) return thisVar;
+  if(!thisVar.type) return thisVar;
+  if(thisVar.type === 'math') return Number(thisVar.value);
+  if(thisVar.type === 'string') return String(thisVar.value);  
 }
-function setVar(name, value, type){
-  if(name.match(/\./g)){
-    let allPieces = name.split('.');
-    let main = allPieces[0];
-    let thisVar = variables[main];
-    for(let i=1; i<allPieces.length-1; i++){
-      if(thisVar === undefined) errors.variableNotFound(name);
-      thisVar = thisVar[allPieces[i]];
+async function setVar(name, value, type){
+  /*let intoArray = name.split(']');
+  let currNameIndex = 0;
+  for(let i=0; i<intoArray.length-1; i++){
+    currNameIndex += intoArray[i].length;
+    let brackIndex = intoArray[i].findIndex(a => a.chars === '[');
+    let part = intoArray.slice(brackIndex+1);
+    let partStack = parseFuncs.stack(part);
+    let newVal = await process(partStack);
+    let beginning = intoArray.slice(0, brackIndex);
+    intoArray[i] = beginning + '.' + newVal;
+  }
+  name = intoArray.join('');*/
+
+  let allPieces = name.split('.');
+  let path = variables;
+  for(let i=0; i<allPieces.length-1; i++){
+    if(path === undefined) errors.variableNotFound(name);
+    path = path[allPieces[i]];
+  }
+
+  if(String(value) === value) type = 'string';
+  if(getValue(value) !== value){
+    path[allPieces[allPieces.length-1]] = {
+      name: allPieces.length-1,
+      type: type,
+      ...value
     }
-    thisVar[allPieces[allPieces.length-1]] = value;
   } else {
-    if(String(value) === value) type = 'string';
-    variables[name] = {
-      name: name,
-      value: value,
-      type: type
-    }
-    if(value.value || value.value === 0){
-      for(let i=0; i<Object.keys(value).length; i++){
-        let curr = Object.keys(value)[i];
-        variables[name][curr] = value[curr];
-      }
+    path[allPieces[allPieces.length-1]] = {
+      name: allPieces.length-1,
+      type: type,
+      value: value
     }
   }
 }
 function getValue(value){
-  if(value === undefined) return value;
-  if(value.value !== undefined) return value.value;
-  return value;
+  if(value.value === undefined) return value;
+  let path = value;
+  while(true){
+    if(path.value === undefined) break;
+    path = path.value;
+  }
+  return path;
 }
 
 // Evaluate Math Expressions
@@ -215,13 +231,13 @@ async function evaluateMath(oldStack){
   // If One Simple Equation
   if(mathStack.length == 3){
     if(mathStack[0].instruction === 'call'){
-      mathStack[0] = await getValue(await call(mathStack[0].name, mathStack[0].args).catch(err => console.error(err)));
+      mathStack[0] = getValue(await call(mathStack[0].name, mathStack[0].args).catch(err => console.error(err)));
     } else if(mathStack[0].instruction === 'var'){
       mathStack[0] = await getVar(mathStack[0].name);
     }
     
     if(mathStack[2].instruction === 'call'){
-      mathStack[2] = await getValue(await call(mathStack[2].name, mathStack[2].args))
+      mathStack[2] = getValue(await call(mathStack[2].name, mathStack[2].args))
       .catch(err => console.error(err));
     } else if(mathStack[2].instruction === 'var'){
       mathStack[2] = await getVar(mathStack[2].name);
@@ -241,7 +257,7 @@ async function evaluateMath(oldStack){
   for(let i=0; i<mathStack.length; i++){
     // Change Variables to Values
     if(mathStack[i].instruction === 'call'){
-      mathStack[i] = await getValue(await call(mathStack[i].name, mathStack[i].args))
+      mathStack[i] = getValue(await call(mathStack[i].name, mathStack[i].args))
       .catch(err => console.error(err));
     } else if(mathStack[i].instruction === 'var'){
       mathStack[i] = await getVar(mathStack[i].name);
@@ -326,12 +342,12 @@ async function operate(name, operator, value){
 async function process(stack, type, raw){
   if(type === 'math'){
     if(raw) return await evaluateMath(stack[0].stack);
-    return await getValue(await evaluateMath(stack[0].stack));
+    return getValue(await evaluateMath(stack[0].stack));
   } else {
     let result = '';
     for(let token of stack){
       if(token.type === 'math'){
-        result += await getValue(await evaluateMath(token.stack));
+        result += getValue(await evaluateMath(token.stack));
       } else {
         result += token;
       }
@@ -366,11 +382,11 @@ async function run(instructions){
         let value = await process(step.expression, step.type, true);
         
         let type = 'string';
-        if(Number(await getValue(value)) === await getValue(value)){
+        if(Number(getValue(value)) !== NaN){
           type = 'math';
         }
 
-        await setVar(step.name, await getValue(value), type);
+        await setVar(step.name, value, type);
         break;
       case 'changevar':
         let thisValue = await process(step.expression, step.type, true);
@@ -378,7 +394,7 @@ async function run(instructions){
         let thisType = 'string';
         if(Number(thisValue) === thisValue) thisType = 'math';
 
-        setVar(step.name, thisValue, thisType);
+        await setVar(step.name, thisValue, thisType);
         break;
       case 'operate':
         await operate(step.name, step.operator, step.expression);
@@ -393,7 +409,9 @@ async function run(instructions){
         inputPrint = JSON.parse('"'+inputPrint+'"');
         inputValue = String(readline.question(inputPrint));
 
-        setVar(step.variable, inputValue, 'string');
+        if(step.variable){
+          await setVar(step.variable, inputValue, 'string');
+        }
         break;
       case 'error':
         let saying = String(await process(step.expression, 'string'));
@@ -403,9 +421,20 @@ async function run(instructions){
         let loopStart = Number(await process(step.start, 'math'));
         let loopEnd = Number(await process(step.end, 'math'));
 
-        for(let i=loopStart; i<loopEnd; i++){
-          let result = await run(step.instructions).catch(err => console.error(err));
-          if(result !== undefined) return await result;
+        // Check if Going Down or Up
+        if(loopEnd < loopStart){
+          if(step.usingVar){
+            step.instructions[step.instructions.length-1].operator = '-';
+          }
+          for(let i=loopStart; i>loopEnd; i--){
+            let result = await run(step.instructions).catch(err => console.error(err));
+            if(result !== undefined) return await result;
+          }
+        } else {
+          for(let i=loopStart; i<loopEnd; i++){
+            let result = await run(step.instructions).catch(err => console.error(err));
+            if(result !== undefined) return await result;
+          }
         }
         break;
       case 'createFn':
@@ -429,6 +458,9 @@ async function run(instructions){
       case 'if':
         if(await compare(step.comparison)){
           let result = await run(step.instructions).catch(err => console.error(err));
+          if(result !== undefined) return result;
+        } else {
+          let result = await run(step.elseInstructions).catch(err => console.error(err));
           if(result !== undefined) return result;
         }
         break;

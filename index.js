@@ -4,4 +4,4 @@ const run = require('./src/runquest');
 run('src/lib/math.qst');
 
 // User Generated
-run('main.qst', false, 'milliseconds');
+run('main.qst', false);
