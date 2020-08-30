@@ -1,10 +1,26 @@
+print('The test files are:\n')
+print('-basics: just the basics');
+print('-library: testing the built in stdlib');
+print('-programs: a few test functions\n');
 
+input('What sample program do you want to run? ', sample);
+
+if(sample = 'basics'){
+  Import('samples/basics.qst');
+} else {
+  if(sample = 'library'){
+    Import('samples/library.qst');
+  } else {
+    if(sample = 'programs'){
+      Import('samples/programs.qst');
+    } else {
+      print('Sorry I don\'t know what that is');
+    }
+  }
+}
 
 //
-This is a comment btw
-
-
-Tutorial is here:
+19 minute tutorial is here:
 www.youtube.com/watch?v=plqDjcEqmFo
 
 Docs are here:

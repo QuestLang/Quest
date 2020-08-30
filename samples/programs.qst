@@ -1,0 +1,37 @@
+func calcPi(){
+  var a = 1;
+  var b = 1;
+  for(0 to 100000){
+    b + 2;
+    a - 1/b;
+    b + 2;
+    a + 1/b;
+  }
+  return a*4;
+}
+
+func fibonacci(n){
+  var a = 0;
+  var b = 1;
+  var c = 1;
+  for(0 to n){
+    c = a + b;
+    a = b;
+    b = c;
+  }
+  return a;
+}
+
+func changeText(){
+  var text = Files.read('test.txt');
+  print('The file `test.txt` says &text');
+  input('What do you want to replace? ', replacer);
+  input('What do you want to replace &replacer with?, replacement);
+  text.replace(replacer, replacement);
+  Files.write('test.txt', text);
+  print('test.txt now says &text');
+}
+
+func simpleHash(){
+
+}

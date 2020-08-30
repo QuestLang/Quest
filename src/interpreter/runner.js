@@ -5,11 +5,13 @@ const parseFuncs = require('./utils').parse;
 
 const MathFunctions = require('../lib/math');
 const StringFunctions = require('../lib/string');
+const ArrayFunctions = require('../lib/arrays');
 const FileFunctions = require('../lib/files');
 
 const MainFunctions = {
   ...MathFunctions,
   ...StringFunctions,
+  ...ArrayFunctions,
   ...FileFunctions
 }
 
@@ -42,6 +44,10 @@ function deepClone(obj) {
 // Compare Statements
 async function compare(stack){
   let comparer = stack.findIndex(a => a.line !== undefined);
+  if(stack[comparer+2] && stack[comparer+2].lexeme === 'comparer'){
+    stack[comparer].chars += stack[comparer+2].chars;
+    stack.splice(comparer+1, 2);
+  }
 
   if(stack[1] === undefined){
     let type = stack[0].find(a => a.type !== 'math') ? 'string' : 'math';
@@ -61,6 +67,10 @@ async function compare(stack){
     return first < last;
   } else if(stack[comparer].chars === '!'){
     return first !== last;
+  } else if(stack[comparer].chars === '>='){
+    return first >= last;
+  } else if(stack[comparer].chars === '<='){
+    return first <= last;
   }
 }
 
@@ -237,8 +247,7 @@ async function evaluateMath(oldStack){
     }
     
     if(mathStack[2].instruction === 'call'){
-      mathStack[2] = getValue(await call(mathStack[2].name, mathStack[2].args))
-      .catch(err => console.error(err));
+      mathStack[2] = getValue(await call(mathStack[2].name, mathStack[2].args).catch(err => console.error(err)));
     } else if(mathStack[2].instruction === 'var'){
       mathStack[2] = await getVar(mathStack[2].name);
     }
@@ -459,7 +468,7 @@ async function run(instructions){
         if(await compare(step.comparison)){
           let result = await run(step.instructions).catch(err => console.error(err));
           if(result !== undefined) return result;
-        } else {
+        } else if(step.elseInstructions){
           let result = await run(step.elseInstructions).catch(err => console.error(err));
           if(result !== undefined) return result;
         }

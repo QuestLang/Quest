@@ -52,11 +52,25 @@ function Capitalize(string){
 function Reverse(string){
   return string.split('').reverse().join('');
 }
+function Split(string, splitter){
+  if(!splitter) splitter = '';
+  let res = { value: string, type: 'array', length: string.length };
+  let splitString = string.split(splitter);
+  for(let i=0; i<splitString.length; i++){
+    res[i] = splitString[i];
+  }
+  return res;
+}
+function Ascii(character){
+  if(character.length != 1) errors.expectedLiteral('a length of 1');
+  return character
+}
 
 module.exports = {
   Slice, Replace, Contains,
   Index, Trim, TrimLeft,
   TrimRight, Upper, Lower,
   StartsWith, EndsWith,
-  Capitalize, Reverse
+  Capitalize, Reverse,
+  Split
 }

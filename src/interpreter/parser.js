@@ -39,7 +39,7 @@ function parser(tokens){
       advance(1);
 
       // Check if at End of Character
-      if(!token) errors.expected(close, oldToken.line, oldToken.col);
+      if(token === undefined) errors.expected(close, oldToken.line, oldToken.col);
 
       // Find if Current Token is a Set
       if(token.chars === open) setCount++;
@@ -353,6 +353,8 @@ function parser(tokens){
 
         let elseInstructions = parser(findSetEnd('{', '}'));
         currInstruction.elseInstructions = elseInstructions;
+      } else {
+        advance(-1);
       }
 
       currInstruction.instruction = 'if';
