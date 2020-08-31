@@ -1,37 +1,48 @@
 const expected = (message, line, col) => {
-  throw new Error('Quest Syntax Error: expected \'' + message + '\' at line ' + line + ' at column '  + col);
+  console.log('\x1b[31m\x1b[1mQuest Syntax Error: expected \'' + message + '\' at line ' + line + ' at column '  + col);
+  process.exit();
 }
 const expectedLiteral = (message, line, col) => {
-  throw new Error('Quest Syntax Error: expected ' + message + ' at line ' + line + ' at column '  + col);
+  console.log('\x1b[31m\x1b[1mQuest Syntax Error: expected ' + message + ' at line ' + line + ' at column '  + col);
+  process.exit();
 }
 const fnName = (line, col) => {
-  throw new Error('Quest Syntax Error: missing function name at line ' + line + ' at column ' + col);
+  console.log('\x1b[31m\x1b[1mQuest Syntax Error: missing function name at line ' + line + ' at column ' + col);
+  process.exit();
 }
 const variableNotFound = (name) => {
-  throw new Error('Quest Syntax Error: variable ' + name + ' is not assigned');
+  console.log('\x1b[31m\x1b[1mQuest Syntax Error: variable ' + name + ' is not assigned');
+  process.exit();
 }
 const functionNotFound = (name) => {
-  throw new Error('Quest Syntax Error: function ' + name + ' is not assigned');
+  console.log('\x1b[31m\x1b[1mQuest Syntax Error: function ' + name + ' is not assigned');
+  process.exit();
 }
 const valueNotFound = (name, line, col) => {
-  throw new Error('Quest Syntax Error: value for variable ' + name + ' was not found at line ' + line + ' at column ' + col);
+  console.log('\x1b[31m\x1b[1mQuest Syntax Error: value for variable ' + name + ' was not found at line ' + line + ' at column ' + col);
+  process.exit();
 }
 const unexpToken = (token, line, col) => {
-  throw new Error('Quest Syntax Error: unexpected token \'' + token + '\' at line ' + line + ' at column ' + col);
+  console.log('\x1b[31m\x1b[1mQuest Syntax Error: unexpected token \'' + token + '\' at line ' + line + ' at column ' + col);
+  process.exit();
 }
 
 const reassignConst = (name, line, col) => {
-  throw new Error('Quest Variable Error: constant ' + name + ' was reassigned at line ' + line + ' at column ' + col);
+  console.log('\x1b[31m\x1b[1mQuest Variable Error: constant ' + name + ' was reassigned at line ' + line + ' at column ' + col);
+  process.exit();
 }
 const unavailableVar = (name, line, col) => {
-  throw new Error('Quest Variable Error: variable ' + name + ' can only have alphanumeric characters at line ' + line + ' at column ' + col);
+  console.log('\x1b[31m\x1b[1mQuest Variable Error: variable ' + name + ' can only have alphanumeric characters at line ' + line + ' at column ' + col);
+  process.exit();
 }
 const numericVar = (name, line, col) => {
-  throw new Error('Quest Variable Error: variable ' + name + ' must start with an alphabetic character at line ' + line + ' at column ' + col);
+  console.log('\x1b[31m\x1b[1mQuest Variable Error: variable ' + name + ' must start with an alphabetic character at line ' + line + ' at column ' + col);
+  process.exit();
 }
 
 const noNegative = (name) => {
-  throw new Error('Quest Runtime Error: function ' + name + ' does not allow a negative parameter');
+  console.log('\x1b[31m\x1b[1mQuest Runtime Error: function ' + name + ' does not allow a negative parameter');
+  process.exit();
 }
 
 module.exports = {
