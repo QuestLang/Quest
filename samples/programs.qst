@@ -26,7 +26,7 @@ func changeText(){
   var text = Files.read('test.txt');
   print('The file `test.txt` says &text');
   input('What do you want to replace? ', replacer);
-  input('What do you want to replace &replacer with?, replacement);
+  input('What do you want to replace &replacer with? ', replacement);
   text.replace(replacer, replacement);
   Files.write('test.txt', text);
   print('test.txt now says &text');
