@@ -54,6 +54,7 @@ function newToken(charGroup){
 
 // LEXER
 let currGroup = '';
+let currStringToken = '';
 let currLine = 0;
 let currCol = 0;
 
@@ -75,14 +76,25 @@ function lexer(text){
       if(!inComment){
         // String Methods
         if(char.match(/[\'\"]/)){
-          if(currGroup[currGroup.length-1] !== '\\'){
-            if(currGroup) tokens.push(newToken(currGroup));
-            inString = !inString;
-            if(inConcat) inConcat = deepConcat = inString = false;
-            continue;
-          } else {
+          if(currGroup[currGroup.length-1] === '\\'){
             currGroup = currGroup.substring(0, currGroup.length-1);
             currGroup += char;
+          } else {
+            if(char === currStringToken){
+              if(currGroup) tokens.push(newToken(currGroup));
+              inString = false;
+              currStringToken = '';
+              if(inConcat) inConcat = deepConcat = false;
+              continue;
+            } else {
+              if(currStringToken === ''){
+                if(currGroup) tokens.push(newToken(currGroup));
+                currStringToken = char;
+                inString = true;
+              } else {
+                currGroup += char;
+              }
+            }
           }
 
         // Concatenation for Strings
@@ -90,6 +102,7 @@ function lexer(text){
           if(currGroup[currGroup.length-1] !== '\\'){
             if(currGroup) tokens.push(newToken(currGroup));
             inString = false;
+            
             inConcat = true;
           } else {
             currGroup = currGroup.substring(0, currGroup.length-1);
